@@ -1,15 +1,18 @@
 <resources>
     <string name="app_name">Popular Movies</string>
-    <string name="base_url">https://api.themoviedb.org/3/discover/movie</string>
-    <string name="movie_details_base_url">https://api.themoviedb.org/3/movie/%1$s</string>
+    <string name="movie_base_url">https://api.themoviedb.org/3/movie/%1$s</string>
     <string name="poster_base_url">https://image.tmdb.org/t/p/</string>
     <string name="default_size">w185</string>
+    <string name="backdrop_size">w500</string>
     <string name="sort_by">Sort By</string>
     <string name="sort_key">sort</string>
     <string name="popularity">Most Popular</string>
     <string name="rate">Top Rate</string>
-    <string name="sort_by_default">popularity.desc</string>
-    <string name="sort_by_rate">vote_average.desc</string>
+    <string name="sort_by_default">popular</string>
+    <string name="sort_by_rate">top_rated</string>
+    <string name="release_date_text">Release Date : %1$s</string>
+    <string name="rate_text">%1$s/10</string>
+    <string name="overview_text">Overview: %1$s</string>
     <string-array name="pref_sort_options">
         <item>@string/popularity</item>
         <item>@string/rate</item>

@@ -11,14 +11,19 @@
         android:roundIcon="@mipmap/baseline_live_tv_black_24"
         android:supportsRtl="true"
         android:theme="@style/Theme.PopularMovies">
-
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Settings" android:label="Settings"/>
+        <activity
+            android:name=".Settings"
+            android:label="Settings" />
+        <activity
+            android:name=".MovieDetailsActivity"
+            android:label="Movie Details" />
     </application>
 
 </manifest>

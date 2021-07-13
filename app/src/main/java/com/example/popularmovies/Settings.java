@@ -9,11 +9,12 @@ public class Settings extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_settings);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-        setContentView(R.layout.activity_settings);
         getSupportFragmentManager().beginTransaction().add(R.id.container, new Setting()).commit();
     }
+
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();

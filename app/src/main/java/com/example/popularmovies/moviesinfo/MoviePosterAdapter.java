@@ -1,6 +1,7 @@
 package com.example.popularmovies.moviesinfo;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,16 +9,17 @@ import android.widget.ImageView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.popularmovies.MovieDetailsActivity;
 import com.example.popularmovies.R;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
 public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.ViewHolder> {
-    private ArrayList<MovieSimpleData> movieSimpleDataList;
+    private ArrayList<MovieDetailsData> movieSimpleDataList;
     private Context context;
 
-    public MoviePosterAdapter(ArrayList<MovieSimpleData> movieDataList, Context context) {
+    public MoviePosterAdapter(ArrayList<MovieDetailsData> movieDataList, Context context) {
         this.movieSimpleDataList = movieDataList;
         this.context = context;
     }
@@ -35,9 +37,16 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
         String size = context.getString(R.string.default_size);
         String path = movieSimpleDataList.get(position).posterPath;
         Picasso.get().load(baseUrl + size + path).placeholder(R.drawable.placeholder).resize(185, 900).into(holder.img);
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(context.getApplicationContext(), MovieDetailsActivity.class);
+            intent.putExtra(MovieDetailsActivity.MOVIE_DATA_KEY, movieSimpleDataList.get(position));
+            context.startActivity(intent);
+        });
     }
 
-    public void insertMovieData(ArrayList<MovieSimpleData> addData){
+
+
+    public void insertMovieData(ArrayList<MovieDetailsData> addData){
         movieSimpleDataList.addAll(addData);
     }
 

@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -14,8 +13,8 @@ import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.popularmovies.moviesinfo.MovieDetailsData;
 import com.example.popularmovies.moviesinfo.MoviePosterAdapter;
-import com.example.popularmovies.moviesinfo.MovieSimpleData;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -63,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private void execMovieDataTask() {
         currentPage = 1;
         MoviePosterLoader.MovieDataTask initDataTask = new MoviePosterLoader.MovieDataTask(this, currentPage);
-        Future<ArrayList<? extends Parcelable>> arrayList = executor.submit(initDataTask);
+        Future<ArrayList<MovieDetailsData>> arrayList = executor.submit(initDataTask);
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         recyclerView.clearOnScrollListeners();
         recyclerView.clearOnChildAttachStateChangeListeners();
@@ -72,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         try {
-            ArrayList<MovieSimpleData> movieDataArrayList = (ArrayList<MovieSimpleData>) arrayList.get();
+            ArrayList<MovieDetailsData> movieDataArrayList = (ArrayList<MovieDetailsData>) arrayList.get();
             adapter = new MoviePosterAdapter(movieDataArrayList, this);
             recyclerView.setAdapter(adapter);
             recyclerView.addOnScrollListener(getListener(gridLayoutManager));
@@ -91,9 +90,9 @@ public class MainActivity extends AppCompatActivity {
                 int totalItem = gridLayoutManager.getItemCount();
                 if (currentPage <= lastPage && (totalItem - onScreenItem) <= (visibleItem + 4)) {
                     currentPage++;
-                    Future<ArrayList<? extends Parcelable>> arrayListFuture = executor.submit(new MoviePosterLoader.MovieDataTask(getApplicationContext(), currentPage));
+                    Future<ArrayList<MovieDetailsData>> arrayListFuture = executor.submit(new MoviePosterLoader.MovieDataTask(getApplicationContext(), currentPage));
                     try {
-                        adapter.insertMovieData((ArrayList<MovieSimpleData>) arrayListFuture.get());
+                        adapter.insertMovieData((ArrayList<MovieDetailsData>) arrayListFuture.get());
                         adapter.notifyItemRangeInserted(currentPage * 20 - 1, 20);
 
                     } catch (ExecutionException e) {
@@ -130,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static class MoviePosterLoader {
 
-        public static class MovieDataTask implements Callable<ArrayList<? extends Parcelable>> {
+        public static class MovieDataTask implements Callable<ArrayList<MovieDetailsData>> {
             private Context context;
             private int page;
 
@@ -141,29 +140,28 @@ public class MainActivity extends AppCompatActivity {
 
 
             @Override
-            public ArrayList<MovieSimpleData> call() {
-                ArrayList<MovieSimpleData> movieDataArrayList = new ArrayList<>();
+            public ArrayList<MovieDetailsData> call() {
+                ArrayList<MovieDetailsData> movieDataArrayList = new ArrayList<>();
                 SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-                apiRequest(context.getString(R.string.base_url), sharedPreferences.getString(context.getString(R.string.sort_key),
-                        context.getString(R.string.sort_by_default)), page, movieDataArrayList);
+                String sort = sharedPreferences.getString(context.getString(R.string.sort_key), context.getString(R.string.sort_by_default));
+                String baseUrl = context.getString(R.string.movie_base_url, sort);
+                apiRequest(baseUrl, page, movieDataArrayList);
                 return movieDataArrayList;
             }
 
 
-            private void apiRequest(String baseUrl, String sortOrder, int page, ArrayList<MovieSimpleData> movieDataArrayList) {
+            private void apiRequest(String baseUrl, int page, ArrayList<MovieDetailsData> movieDataArrayList) {
                 HttpURLConnection urlConnection;
                 BufferedReader reader;
                 Uri.Builder uriBuilder = new Uri.Builder();
                 uriBuilder.encodedPath(baseUrl);
                 uriBuilder.appendQueryParameter("api_key", BuildConfig.API_KEY);
-                uriBuilder.appendQueryParameter("sort_by", sortOrder);
                 uriBuilder.appendQueryParameter("page", String.valueOf(page));
                 try {
                     urlConnection = (HttpURLConnection) new URL(uriBuilder.build().toString()).openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.connect();
 
-                    // Read the input stream into a String
                     InputStream inputStream = urlConnection.getInputStream();
                     StringBuffer buffer = new StringBuffer();
 
@@ -184,31 +182,31 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-            private static void getSimpleMovieDataFromJson(String moviesJsonStr, ArrayList<MovieSimpleData> movieDataArrayList) throws JSONException {
+            private static void getSimpleMovieDataFromJson(String moviesJsonStr, ArrayList<MovieDetailsData> movieDataArrayList) throws JSONException {
                 final String RESULT = "results";
                 final String POSTER_PATH = "poster_path";
-//                final String ORIGINAL_TITLE = "original_title";
-//                final String OVERVIEW = "overview";
-//                final String OVER_AVERAGE = "vote_average";
-//                final String RELEASE_DATE = "release_date";
+                final String BACK_DROP_PATH = "backdrop_path";
+                final String ORIGINAL_TITLE = "original_title";
+                final String OVERVIEW = "overview";
+                final String OVER_AVERAGE = "vote_average";
+                final String RELEASE_DATE = "release_date";
                 final String MOVIE_ID = "id";
                 JSONObject moviesJson = new JSONObject(moviesJsonStr);
                 JSONArray movieArray = moviesJson.getJSONArray(RESULT);
-                int page = Integer.parseInt(moviesJson.getString("page"));
-                int totalPage = Integer.parseInt(moviesJson.getString("total_pages"));
-                int totalResult = Integer.parseInt(moviesJson.getString("total_results"));
-                lastPage = totalPage;
-                System.out.println("Page" + page);
+                lastPage = Integer.parseInt(moviesJson.getString("total_pages"));
+
 
                 for (int i = 0; i < movieArray.length(); i++) {
                     JSONObject movieInfo = movieArray.getJSONObject(i);
                     String posterPath = movieInfo.getString(POSTER_PATH);
+                    String backDropPath = movieInfo.getString(BACK_DROP_PATH);
                     String movieId = movieInfo.getString(MOVIE_ID);
-//                    String overview = movieInfo.getString(OVERVIEW);
-//                    String rateAverage = movieInfo.getString(OVER_AVERAGE);
-//                    String releaseDate = movieInfo.has(RELEASE_DATE)? movieInfo.getString(RELEASE_DATE) : "UNKNOWN";
+                    String title = movieInfo.getString(ORIGINAL_TITLE);
+                    String overview = movieInfo.getString(OVERVIEW);
+                    String rateAverage = movieInfo.getString(OVER_AVERAGE);
+                    String releaseDate = movieInfo.has(RELEASE_DATE) ? movieInfo.getString(RELEASE_DATE) : "UNKNOWN";
 
-                    movieDataArrayList.add(new MovieSimpleData(posterPath, movieId));
+                    movieDataArrayList.add(new MovieDetailsData(posterPath, movieId, title, overview, rateAverage, releaseDate, backDropPath));
                 }
 
             }
