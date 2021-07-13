@@ -44,26 +44,23 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        MoviePosterLoader.MovieDataTask initDataTask = new MoviePosterLoader.MovieDataTask(this, currentPage);
-        Future<ArrayList<? extends Parcelable>> arrayList = executor.submit(initDataTask);
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(getApplicationContext(), 2);
-        recyclerView.setLayoutManager(gridLayoutManager);
-
-
-        try {
-            ArrayList<MovieSimpleData> movieDataArrayList = (ArrayList<MovieSimpleData>) arrayList.get();
-            adapter = new MoviePosterAdapter(movieDataArrayList, this);
-            recyclerView.setAdapter(adapter);
-            recyclerView.addOnScrollListener(getListener(gridLayoutManager));
-        } catch (ExecutionException | InterruptedException e) {
-            e.printStackTrace();
-        }
+        execMovieDataTask();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        execMovieDataTask();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        adapter = null;
+        executor.shutdown();
+    }
+
+    private void execMovieDataTask() {
         currentPage = 1;
         MoviePosterLoader.MovieDataTask initDataTask = new MoviePosterLoader.MovieDataTask(this, currentPage);
         Future<ArrayList<? extends Parcelable>> arrayList = executor.submit(initDataTask);
@@ -116,16 +113,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             startActivity(new Intent(this, Settings.class));
@@ -181,7 +174,6 @@ public class MainActivity extends AppCompatActivity {
                         buffer.append(line);
                     }
 
-
                     urlConnection.disconnect();
                     reader.close();
                     getSimpleMovieDataFromJson(buffer.toString(), movieDataArrayList);
@@ -189,7 +181,6 @@ public class MainActivity extends AppCompatActivity {
                 } catch (JSONException | IOException e) {
                     e.printStackTrace();
                 }
-
             }
 
 
@@ -222,12 +213,5 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        adapter = null;
-        executor.shutdown();
     }
 }

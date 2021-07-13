@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Popular Movies</string>
     <string name="base_url">https://api.themoviedb.org/3/discover/movie</string>
+    <string name="movie_details_base_url">https://api.themoviedb.org/3/movie/%1$s</string>
     <string name="poster_base_url">https://image.tmdb.org/t/p/</string>
     <string name="default_size">w185</string>
     <string name="sort_by">Sort By</string>
