@@ -3,4 +3,19 @@
     <string name="base_url">https://api.themoviedb.org/3/discover/movie</string>
     <string name="poster_base_url">https://image.tmdb.org/t/p/</string>
     <string name="default_size">w185</string>
+    <string name="sort_by">Sort By</string>
+    <string name="sort_key">sort</string>
+    <string name="popularity">Most Popular</string>
+    <string name="rate">Top Rate</string>
+    <string name="sort_by_default">popularity.desc</string>
+    <string name="sort_by_rate">vote_average.desc</string>
+    <string-array name="pref_sort_options">
+        <item>@string/popularity</item>
+        <item>@string/rate</item>
+    </string-array>
+    <string-array name="pref_sort_values">
+        <item>@string/sort_by_default</item>
+        <item>@string/sort_by_rate</item>
+    </string-array>
+
 </resources>
