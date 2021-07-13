@@ -7,8 +7,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -44,12 +47,22 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         execMovieDataTask();
+        Button retry = findViewById(R.id.retryButton);
+        retry.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                execMovieDataTask();
+            }
+        });
+
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         execMovieDataTask();
+
     }
 
     @Override
@@ -61,23 +74,41 @@ public class MainActivity extends AppCompatActivity {
 
     private void execMovieDataTask() {
         currentPage = 1;
-        MoviePosterLoader.MovieDataTask initDataTask = new MoviePosterLoader.MovieDataTask(this, currentPage);
-        Future<ArrayList<MovieDetailsData>> arrayList = executor.submit(initDataTask);
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         recyclerView.clearOnScrollListeners();
         recyclerView.clearOnChildAttachStateChangeListeners();
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(getApplicationContext(), 2);
-        recyclerView.setLayoutManager(gridLayoutManager);
 
 
-        try {
-            ArrayList<MovieDetailsData> movieDataArrayList = (ArrayList<MovieDetailsData>) arrayList.get();
-            adapter = new MoviePosterAdapter(movieDataArrayList, this);
-            recyclerView.setAdapter(adapter);
-            recyclerView.addOnScrollListener(getListener(gridLayoutManager));
-        } catch (ExecutionException | InterruptedException e) {
-            e.printStackTrace();
+        if (new NetworkManager(this).isNetworkAvailable()) {
+            hideNetwork(recyclerView);
+            MoviePosterLoader.MovieDataTask initDataTask = new MoviePosterLoader.MovieDataTask(this, currentPage);
+            Future<ArrayList<MovieDetailsData>> arrayList = executor.submit(initDataTask);
+            GridLayoutManager gridLayoutManager = new GridLayoutManager(getApplicationContext(), 2);
+            recyclerView.setLayoutManager(gridLayoutManager);
+
+
+            try {
+                ArrayList<MovieDetailsData> movieDataArrayList = (ArrayList<MovieDetailsData>) arrayList.get();
+                if (arrayList != null) {
+                    hideNetwork(recyclerView);
+                    adapter = new MoviePosterAdapter(movieDataArrayList, this);
+                    recyclerView.setAdapter(adapter);
+                    recyclerView.addOnScrollListener(getListener(gridLayoutManager));
+                } else {
+                    showNetworkErro(recyclerView);
+                }
+
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        } else {
+            showNetworkErro(recyclerView);
         }
+    }
+
+    private void hideNetwork(RecyclerView recyclerView) {
+        recyclerView.setVisibility(View.VISIBLE);
+        findViewById(R.id.networkErrorConstrainLayout).setVisibility(View.GONE);
     }
 
     private RecyclerView.OnScrollListener getListener(GridLayoutManager gridLayoutManager) {
@@ -90,10 +121,17 @@ public class MainActivity extends AppCompatActivity {
                 int totalItem = gridLayoutManager.getItemCount();
                 if (currentPage <= lastPage && (totalItem - onScreenItem) <= (visibleItem + 4)) {
                     currentPage++;
-                    Future<ArrayList<MovieDetailsData>> arrayListFuture = executor.submit(new MoviePosterLoader.MovieDataTask(getApplicationContext(), currentPage));
+                    Future<ArrayList<MovieDetailsData>> arrayListFuture = executor.submit(new
+                            MoviePosterLoader.MovieDataTask(getApplicationContext(), currentPage));
                     try {
-                        adapter.insertMovieData((ArrayList<MovieDetailsData>) arrayListFuture.get());
-                        adapter.notifyItemRangeInserted(currentPage * 20 - 1, 20);
+                        ArrayList<MovieDetailsData> movieDetailsDataArrayList = (ArrayList<MovieDetailsData>) arrayListFuture.get();
+                        if (movieDetailsDataArrayList != null) {
+                            hideNetwork(recyclerView);
+                            adapter.insertMovieData(movieDetailsDataArrayList);
+                            adapter.notifyItemRangeInserted(currentPage * 20 - 1, 20);
+                        } else {
+                            showNetworkErro(recyclerView);
+                        }
 
                     } catch (ExecutionException e) {
                         e.printStackTrace();
@@ -108,6 +146,12 @@ public class MainActivity extends AppCompatActivity {
                 super.onScrolled(recyclerView, dx, dy);
             }
         };
+    }
+
+    private void showNetworkErro(RecyclerView recyclerView) {
+        recyclerView.setVisibility(View.GONE);
+        ConstraintLayout constraintLayout = findViewById(R.id.networkErrorConstrainLayout);
+        constraintLayout.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -145,7 +189,11 @@ public class MainActivity extends AppCompatActivity {
                 SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
                 String sort = sharedPreferences.getString(context.getString(R.string.sort_key), context.getString(R.string.sort_by_default));
                 String baseUrl = context.getString(R.string.movie_base_url, sort);
-                apiRequest(baseUrl, page, movieDataArrayList);
+                if (new NetworkManager(context).isNetworkAvailable()) {
+                    apiRequest(baseUrl, page, movieDataArrayList);
+                } else {
+                    movieDataArrayList = null;
+                }
                 return movieDataArrayList;
             }
 

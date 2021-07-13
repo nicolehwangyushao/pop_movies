@@ -13,6 +13,8 @@
     <string name="release_date_text">Release Date : %1$s</string>
     <string name="rate_text">%1$s/10</string>
     <string name="overview_text">Overview: %1$s</string>
+    <string name="network_error_text">Please Check Your Network Connection and Try Again</string>
+    <string name="retry_button_text">Retry</string>
     <string-array name="pref_sort_options">
         <item>@string/popularity</item>
         <item>@string/rate</item>
