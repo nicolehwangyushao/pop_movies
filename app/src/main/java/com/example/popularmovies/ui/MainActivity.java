@@ -1,4 +1,4 @@
-package com.example.popularmovies;
+package com.example.popularmovies.ui;
 
 import android.content.Context;
 import android.content.Intent;
@@ -15,7 +15,8 @@ import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.popularmovies.movies.MoviePosterAdapter;
+import com.example.popularmovies.R;
+import com.example.popularmovies.ui.adapter.MoviePosterAdapter;
 import com.example.popularmovies.response.MovieResult;
 import com.example.popularmovies.service.MovieApiClient;
 import com.example.popularmovies.service.NetworkManager;
@@ -84,14 +85,10 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(Call<MovieResult> call, Response<MovieResult> response) {
                 MovieResult result = response.body();
                 ArrayList<MovieResult.MovieData> movieDataArrayList = result.getResults();
-                if (movieDataArrayList!= null) {
-                    hideNetworkError(recyclerView);
-                    adapter = new MoviePosterAdapter(movieDataArrayList, context);
-                    recyclerView.setAdapter(adapter);
-                    recyclerView.addOnScrollListener(getListener(gridLayoutManager));
-                } else {
-                    showNetworkError(recyclerView);
-                }
+                hideNetworkError(recyclerView);
+                adapter = new MoviePosterAdapter(movieDataArrayList, context);
+                recyclerView.setAdapter(adapter);
+                recyclerView.addOnScrollListener(getListener(gridLayoutManager));
                 lastPage = result.getTotalPage();
 
             }
@@ -99,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<MovieResult> call, Throwable t) {
                 // the network call was a failure
-                System.out.println("error");
+                showNetworkError(recyclerView);
             }
         });
     }
@@ -114,13 +111,9 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(Call<MovieResult> call, Response<MovieResult> response) {
                 MovieResult result = response.body();
                 ArrayList<MovieResult.MovieData> movieDataArrayList = result.getResults();
-                if (movieDataArrayList != null) {
-                    hideNetworkError(recyclerView);
-                    adapter.insertMovieData(movieDataArrayList);
-                    adapter.notifyItemRangeInserted(currentPage * itemCount - 1, itemCount);
-                } else {
-                    showNetworkError(recyclerView);
-                }
+                hideNetworkError(recyclerView);
+                adapter.insertMovieData(movieDataArrayList);
+                adapter.notifyItemRangeInserted(currentPage * itemCount - 1, itemCount);
                 lastPage = result.getTotalPage();
 
             }
@@ -128,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<MovieResult> call, Throwable t) {
                 // the network call was a failure
-                System.out.println("error");
+                showNetworkError(recyclerView);
             }
         });
     }
@@ -163,7 +156,6 @@ public class MainActivity extends AppCompatActivity {
                     if (currentPage <= lastPage && (totalItem - onScreenItem) <= (visibleItem + 4)) {
                         currentPage++;
                         updateMovieDataTask(recyclerView);
-
                     }
                 }else {
                     showNetworkError(recyclerView);

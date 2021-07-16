@@ -1,9 +1,11 @@
-package com.example.popularmovies;
+package com.example.popularmovies.ui;
 
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
+
+import com.example.popularmovies.R;
 
 public class Settings extends AppCompatActivity {
     @Override

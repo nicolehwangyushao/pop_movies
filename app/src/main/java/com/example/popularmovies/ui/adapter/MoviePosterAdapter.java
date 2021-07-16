@@ -1,4 +1,4 @@
-package com.example.popularmovies.movies;
+package com.example.popularmovies.ui.adapter;
 
 import android.content.Context;
 import android.content.Intent;
@@ -9,7 +9,7 @@ import android.widget.ImageView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.popularmovies.MovieDetailsActivity;
+import com.example.popularmovies.ui.MovieDetailsActivity;
 import com.example.popularmovies.R;
 import com.example.popularmovies.response.MovieResult;
 import com.squareup.picasso.Picasso;
@@ -17,8 +17,8 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 
 public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.ViewHolder> {
-    private ArrayList<MovieResult.MovieData> movieDataArrayList;
-    private Context context;
+    private final ArrayList<MovieResult.MovieData> movieDataArrayList;
+    private final Context context;
 
     public MoviePosterAdapter(ArrayList<MovieResult.MovieData> movieDataList, Context context) {
         this.movieDataArrayList = movieDataList;
@@ -46,8 +46,7 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
     }
 
 
-
-    public void insertMovieData(ArrayList<MovieResult.MovieData> addData){
+    public void insertMovieData(ArrayList<MovieResult.MovieData> addData) {
         movieDataArrayList.addAll(addData);
     }
 

@@ -12,7 +12,7 @@
         android:roundIcon="@mipmap/baseline_live_tv_black_24"
         android:supportsRtl="true"
         android:theme="@style/Theme.PopularMovies">
-        <activity android:name=".MainActivity">
+        <activity android:name=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -20,10 +20,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Settings"
+            android:name=".ui.Settings"
             android:label="Settings" />
         <activity
-            android:name=".MovieDetailsActivity"
+            android:name=".ui.MovieDetailsActivity"
             android:label="Movie Details" />
     </application>
 

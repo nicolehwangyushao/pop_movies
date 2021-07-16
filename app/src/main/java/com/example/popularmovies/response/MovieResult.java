@@ -21,7 +21,7 @@ public class MovieResult {
 
     public class MovieData implements Serializable {
         @SerializedName("id")
-        private String movieId;
+        private int movieId;
         @SerializedName("poster_path")
         private String posterPath;
         @SerializedName("backdrop_path")
@@ -35,7 +35,7 @@ public class MovieResult {
         @SerializedName("release_date")
         private String releaseDate;
 
-        public String getMovieId() {
+        public int getMovieId() {
             return movieId;
         }
 
