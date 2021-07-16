@@ -62,7 +62,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         call.enqueue(new Callback<MovieVideoResult>() {
             @Override
             public void onResponse(Call<MovieVideoResult> call, Response<MovieVideoResult> response) {
-
+                System.out.println(response.body().getResults());
             }
 
             @Override

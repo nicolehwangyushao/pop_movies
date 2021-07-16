@@ -3,6 +3,7 @@ package com.example.popularmovies.ui;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -134,7 +135,17 @@ public class MainActivity extends AppCompatActivity {
 
         if (new NetworkManager(this).isNetworkAvailable()) {
             hideNetworkError(recyclerView);
-            GridLayoutManager gridLayoutManager = new GridLayoutManager(getApplicationContext(), 2);
+
+            int orientation = getResources().getConfiguration().orientation;
+            int spanCount ;
+            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                // code for portrait mode
+                spanCount = 2;
+            } else {
+                // code for landscape mode
+                spanCount = 4;
+            }
+            GridLayoutManager gridLayoutManager = new GridLayoutManager(getApplicationContext(), spanCount);
             recyclerView.setLayoutManager(gridLayoutManager);
             initMovieDataTask(recyclerView, gridLayoutManager);
 
