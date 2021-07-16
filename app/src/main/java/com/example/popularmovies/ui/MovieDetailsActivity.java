@@ -1,17 +1,24 @@
 package com.example.popularmovies.ui;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.popularmovies.R;
 import com.example.popularmovies.response.MovieResult;
 import com.example.popularmovies.response.MovieVideoResult;
 import com.example.popularmovies.service.MovieApiClient;
 import com.example.popularmovies.service.RetrofitService;
+import com.example.popularmovies.ui.adapter.MoviePosterAdapter;
+import com.example.popularmovies.ui.adapter.MovieVideoAdapter;
 import com.squareup.picasso.Picasso;
+
+import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -44,6 +51,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         rateTextView.setText(rate);
         TextView overviewTextView = findViewById(R.id.overviewTextView);
         overviewTextView.setText(overviewText);
+        RecyclerView recyclerView = findViewById(R.id.videoRecyclerView);
 
         Picasso.get().load(baseUrl + backdropSize + movieData.getBackDropPath()).placeholder(R.drawable.placeholder).resize(1100, 350).
                 into((ImageView) findViewById(R.id.backDropPosterImageView));
@@ -51,18 +59,21 @@ public class MovieDetailsActivity extends AppCompatActivity {
         Picasso.get().load(baseUrl + posterSize + movieData.getPosterPath()).placeholder(R.drawable.placeholder).resize(300, 500).
                 into((ImageView) findViewById(R.id.posterImageView));
 
-        getMovieVideo(movieData.getMovieId());
+        getMovieVideo(movieData.getMovieId(), recyclerView);
 
 
     }
 
-    private void getMovieVideo(int movieId) {
-
+    private void getMovieVideo(int movieId, RecyclerView recyclerView) {
+        Context context = this;
         Call<MovieVideoResult> call = client.getMovieVideo(movieId);
         call.enqueue(new Callback<MovieVideoResult>() {
             @Override
             public void onResponse(Call<MovieVideoResult> call, Response<MovieVideoResult> response) {
-                System.out.println(response.body().getResults());
+                ArrayList<MovieVideoResult.MovieVideo> movieVideos = response.body().getResults();
+                MovieVideoAdapter videoAdapter = new MovieVideoAdapter(movieVideos, context);
+                recyclerView.setAdapter(videoAdapter);
+                recyclerView.setLayoutManager(new LinearLayoutManager(context));
             }
 
             @Override

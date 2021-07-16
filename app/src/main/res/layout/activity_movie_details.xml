@@ -80,23 +80,19 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/posterImageView" />
 
-        <View
-            android:id="@+id/line1"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="10dp"
-            android:background="@color/grey"
-            app:layout_constraintTop_toBottomOf="@id/overviewTextView" />
 
         <TextView
             android:id="@+id/trailersTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Trailers"
-            app:layout_constraintTop_toBottomOf="@id/line1" />
+            android:text="@string/video_trailers_title"
+            android:textSize="22sp"
+            android:layout_marginTop="10dp"
+            android:textColor="@color/primary_text"
+            app:layout_constraintTop_toBottomOf="@id/overviewTextView" />
 
         <View
-            android:id="@+id/line2"
+            android:id="@+id/line"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="10dp"
@@ -107,6 +103,8 @@
             android:id="@+id/videoRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/line2" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/line" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

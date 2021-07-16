@@ -60,7 +60,7 @@ public class MovieVideoAdapter extends RecyclerView.Adapter<MovieVideoAdapter.Vi
 
         public ViewHolder(View view) {
             super(view);
-            videoTextView = view.findViewById(R.id.trailersTextView);
+            videoTextView = view.findViewById(R.id.videoNameTextView);
         }
     }
 }
