@@ -1,13 +1,9 @@
-package com.example.popularmovies;
+package com.example.popularmovies.service;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.os.Build;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class NetworkManager {
     Context mContext;

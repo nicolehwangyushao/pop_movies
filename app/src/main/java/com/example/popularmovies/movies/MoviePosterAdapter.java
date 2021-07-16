@@ -1,4 +1,4 @@
-package com.example.popularmovies.moviesinfo;
+package com.example.popularmovies.movies;
 
 import android.content.Context;
 import android.content.Intent;
@@ -11,16 +11,17 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.popularmovies.MovieDetailsActivity;
 import com.example.popularmovies.R;
+import com.example.popularmovies.response.MovieResult;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
 public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.ViewHolder> {
-    private ArrayList<MovieDetailsData> movieSimpleDataList;
+    private ArrayList<MovieResult.MovieData> movieDataArrayList;
     private Context context;
 
-    public MoviePosterAdapter(ArrayList<MovieDetailsData> movieDataList, Context context) {
-        this.movieSimpleDataList = movieDataList;
+    public MoviePosterAdapter(ArrayList<MovieResult.MovieData> movieDataList, Context context) {
+        this.movieDataArrayList = movieDataList;
         this.context = context;
     }
 
@@ -35,24 +36,24 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
 
         String baseUrl = context.getString(R.string.poster_base_url);
         String size = context.getString(R.string.default_size);
-        String path = movieSimpleDataList.get(position).posterPath;
+        String path = movieDataArrayList.get(position).getPosterPath();
         Picasso.get().load(baseUrl + size + path).placeholder(R.drawable.placeholder).resize(185, 900).into(holder.img);
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context.getApplicationContext(), MovieDetailsActivity.class);
-            intent.putExtra(MovieDetailsActivity.MOVIE_DATA_KEY, movieSimpleDataList.get(position));
+            intent.putExtra(MovieDetailsActivity.MOVIE_DATA_KEY, movieDataArrayList.get(position));
             context.startActivity(intent);
         });
     }
 
 
 
-    public void insertMovieData(ArrayList<MovieDetailsData> addData){
-        movieSimpleDataList.addAll(addData);
+    public void insertMovieData(ArrayList<MovieResult.MovieData> addData){
+        movieDataArrayList.addAll(addData);
     }
 
     @Override
     public int getItemCount() {
-        return movieSimpleDataList.size();
+        return movieDataArrayList.size();
     }
 
     @Override

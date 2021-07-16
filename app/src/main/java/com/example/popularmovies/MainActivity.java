@@ -3,7 +3,6 @@ package com.example.popularmovies;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,142 +15,34 @@ import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.popularmovies.moviesinfo.MovieDetailsData;
-import com.example.popularmovies.moviesinfo.MoviePosterAdapter;
+import com.example.popularmovies.movies.MoviePosterAdapter;
+import com.example.popularmovies.response.MovieResult;
+import com.example.popularmovies.service.MovieApiClient;
+import com.example.popularmovies.service.NetworkManager;
+import com.example.popularmovies.service.RetrofitService;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-    ExecutorService executor = Executors.newSingleThreadExecutor();
     int currentPage = 1;
-    static int lastPage = -1;
     MoviePosterAdapter adapter;
+    int lastPage = -1;
+    MovieApiClient client = new RetrofitService().getMovieApiClient();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        execMovieDataTask();
+
+        execInitMovieDataTask();
         Button retry = findViewById(R.id.retryButton);
-        retry.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                execMovieDataTask();
-            }
-        });
+        retry.setOnClickListener(v -> execInitMovieDataTask());
 
 
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        execMovieDataTask();
-
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        adapter = null;
-        executor.shutdown();
-    }
-
-    private void execMovieDataTask() {
-        currentPage = 1;
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        recyclerView.clearOnScrollListeners();
-        recyclerView.clearOnChildAttachStateChangeListeners();
-
-
-        if (new NetworkManager(this).isNetworkAvailable()) {
-            hideNetwork(recyclerView);
-            MoviePosterLoader.MovieDataTask initDataTask = new MoviePosterLoader.MovieDataTask(this, currentPage);
-            Future<ArrayList<MovieDetailsData>> arrayList = executor.submit(initDataTask);
-            GridLayoutManager gridLayoutManager = new GridLayoutManager(getApplicationContext(), 2);
-            recyclerView.setLayoutManager(gridLayoutManager);
-
-
-            try {
-                ArrayList<MovieDetailsData> movieDataArrayList = (ArrayList<MovieDetailsData>) arrayList.get();
-                if (arrayList != null) {
-                    hideNetwork(recyclerView);
-                    adapter = new MoviePosterAdapter(movieDataArrayList, this);
-                    recyclerView.setAdapter(adapter);
-                    recyclerView.addOnScrollListener(getListener(gridLayoutManager));
-                } else {
-                    showNetworkErro(recyclerView);
-                }
-
-            } catch (ExecutionException | InterruptedException e) {
-                e.printStackTrace();
-            }
-        } else {
-            showNetworkErro(recyclerView);
-        }
-    }
-
-    private void hideNetwork(RecyclerView recyclerView) {
-        recyclerView.setVisibility(View.VISIBLE);
-        findViewById(R.id.networkErrorConstrainLayout).setVisibility(View.GONE);
-    }
-
-    private RecyclerView.OnScrollListener getListener(GridLayoutManager gridLayoutManager) {
-        return new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-                int onScreenItem = recyclerView.getChildCount();
-                int visibleItem = gridLayoutManager.findFirstVisibleItemPosition();
-                int totalItem = gridLayoutManager.getItemCount();
-                if (currentPage <= lastPage && (totalItem - onScreenItem) <= (visibleItem + 4)) {
-                    currentPage++;
-                    Future<ArrayList<MovieDetailsData>> arrayListFuture = executor.submit(new
-                            MoviePosterLoader.MovieDataTask(getApplicationContext(), currentPage));
-                    try {
-                        ArrayList<MovieDetailsData> movieDetailsDataArrayList = (ArrayList<MovieDetailsData>) arrayListFuture.get();
-                        if (movieDetailsDataArrayList != null) {
-                            hideNetwork(recyclerView);
-                            adapter.insertMovieData(movieDetailsDataArrayList);
-                            adapter.notifyItemRangeInserted(currentPage * 20 - 1, 20);
-                        } else {
-                            showNetworkErro(recyclerView);
-                        }
-
-                    } catch (ExecutionException e) {
-                        e.printStackTrace();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-            }
-        };
-    }
-
-    private void showNetworkErro(RecyclerView recyclerView) {
-        recyclerView.setVisibility(View.GONE);
-        ConstraintLayout constraintLayout = findViewById(R.id.networkErrorConstrainLayout);
-        constraintLayout.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -170,94 +61,132 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        execInitMovieDataTask();
 
-    public static class MoviePosterLoader {
+    }
 
-        public static class MovieDataTask implements Callable<ArrayList<MovieDetailsData>> {
-            private Context context;
-            private int page;
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        adapter = null;
+    }
 
-            public MovieDataTask(Context context, int page) {
-                this.context = context;
-                this.page = page;
+    private void initMovieDataTask(RecyclerView recyclerView, GridLayoutManager gridLayoutManager) {
+        Context context = this;
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String sort = sharedPreferences.getString(this.getString(R.string.sort_key), this.getString(R.string.sort_by_default));
+        Call<MovieResult> call = client.getMoviesList(sort, currentPage);
+        call.enqueue(new Callback<MovieResult>() {
+            @Override
+            public void onResponse(Call<MovieResult> call, Response<MovieResult> response) {
+                MovieResult result = response.body();
+                ArrayList<MovieResult.MovieData> movieDataArrayList = result.getResults();
+                if (movieDataArrayList!= null) {
+                    hideNetworkError(recyclerView);
+                    adapter = new MoviePosterAdapter(movieDataArrayList, context);
+                    recyclerView.setAdapter(adapter);
+                    recyclerView.addOnScrollListener(getListener(gridLayoutManager));
+                } else {
+                    showNetworkError(recyclerView);
+                }
+                lastPage = result.getTotalPage();
+
             }
-
 
             @Override
-            public ArrayList<MovieDetailsData> call() {
-                ArrayList<MovieDetailsData> movieDataArrayList = new ArrayList<>();
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-                String sort = sharedPreferences.getString(context.getString(R.string.sort_key), context.getString(R.string.sort_by_default));
-                String baseUrl = context.getString(R.string.movie_base_url, sort);
-                if (new NetworkManager(context).isNetworkAvailable()) {
-                    apiRequest(baseUrl, page, movieDataArrayList);
+            public void onFailure(Call<MovieResult> call, Throwable t) {
+                // the network call was a failure
+                System.out.println("error");
+            }
+        });
+    }
+
+    private void updateMovieDataTask(RecyclerView recyclerView) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String sort = sharedPreferences.getString(this.getString(R.string.sort_key), this.getString(R.string.sort_by_default));
+        final int itemCount = 20;
+        Call<MovieResult> call = client.getMoviesList(sort, currentPage);
+        call.enqueue(new Callback<MovieResult>() {
+            @Override
+            public void onResponse(Call<MovieResult> call, Response<MovieResult> response) {
+                MovieResult result = response.body();
+                ArrayList<MovieResult.MovieData> movieDataArrayList = result.getResults();
+                if (movieDataArrayList != null) {
+                    hideNetworkError(recyclerView);
+                    adapter.insertMovieData(movieDataArrayList);
+                    adapter.notifyItemRangeInserted(currentPage * itemCount - 1, itemCount);
                 } else {
-                    movieDataArrayList = null;
+                    showNetworkError(recyclerView);
                 }
-                return movieDataArrayList;
+                lastPage = result.getTotalPage();
+
             }
 
-
-            private void apiRequest(String baseUrl, int page, ArrayList<MovieDetailsData> movieDataArrayList) {
-                HttpURLConnection urlConnection;
-                BufferedReader reader;
-                Uri.Builder uriBuilder = new Uri.Builder();
-                uriBuilder.encodedPath(baseUrl);
-                uriBuilder.appendQueryParameter("api_key", BuildConfig.API_KEY);
-                uriBuilder.appendQueryParameter("page", String.valueOf(page));
-                try {
-                    urlConnection = (HttpURLConnection) new URL(uriBuilder.build().toString()).openConnection();
-                    urlConnection.setRequestMethod("GET");
-                    urlConnection.connect();
-
-                    InputStream inputStream = urlConnection.getInputStream();
-                    StringBuffer buffer = new StringBuffer();
-
-                    reader = new BufferedReader(new InputStreamReader(inputStream));
-                    String line;
-
-                    while ((line = reader.readLine()) != null) {
-                        buffer.append(line);
-                    }
-
-                    urlConnection.disconnect();
-                    reader.close();
-                    getSimpleMovieDataFromJson(buffer.toString(), movieDataArrayList);
-
-                } catch (JSONException | IOException e) {
-                    e.printStackTrace();
-                }
+            @Override
+            public void onFailure(Call<MovieResult> call, Throwable t) {
+                // the network call was a failure
+                System.out.println("error");
             }
+        });
+    }
 
+    private void execInitMovieDataTask() {
+        currentPage = 1;
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.clearOnScrollListeners();
+        recyclerView.clearOnChildAttachStateChangeListeners();
 
-            private static void getSimpleMovieDataFromJson(String moviesJsonStr, ArrayList<MovieDetailsData> movieDataArrayList) throws JSONException {
-                final String RESULT = "results";
-                final String POSTER_PATH = "poster_path";
-                final String BACK_DROP_PATH = "backdrop_path";
-                final String ORIGINAL_TITLE = "original_title";
-                final String OVERVIEW = "overview";
-                final String OVER_AVERAGE = "vote_average";
-                final String RELEASE_DATE = "release_date";
-                final String MOVIE_ID = "id";
-                JSONObject moviesJson = new JSONObject(moviesJsonStr);
-                JSONArray movieArray = moviesJson.getJSONArray(RESULT);
-                lastPage = Integer.parseInt(moviesJson.getString("total_pages"));
+        if (new NetworkManager(this).isNetworkAvailable()) {
+            hideNetworkError(recyclerView);
+            GridLayoutManager gridLayoutManager = new GridLayoutManager(getApplicationContext(), 2);
+            recyclerView.setLayoutManager(gridLayoutManager);
+            initMovieDataTask(recyclerView, gridLayoutManager);
 
-
-                for (int i = 0; i < movieArray.length(); i++) {
-                    JSONObject movieInfo = movieArray.getJSONObject(i);
-                    String posterPath = movieInfo.getString(POSTER_PATH);
-                    String backDropPath = movieInfo.getString(BACK_DROP_PATH);
-                    String movieId = movieInfo.getString(MOVIE_ID);
-                    String title = movieInfo.getString(ORIGINAL_TITLE);
-                    String overview = movieInfo.getString(OVERVIEW);
-                    String rateAverage = movieInfo.getString(OVER_AVERAGE);
-                    String releaseDate = movieInfo.has(RELEASE_DATE) ? movieInfo.getString(RELEASE_DATE) : "UNKNOWN";
-
-                    movieDataArrayList.add(new MovieDetailsData(posterPath, movieId, title, overview, rateAverage, releaseDate, backDropPath));
-                }
-
-            }
+        } else {
+            showNetworkError(recyclerView);
         }
     }
+
+
+    private RecyclerView.OnScrollListener getListener(GridLayoutManager gridLayoutManager) {
+        return new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if (new NetworkManager(getApplicationContext()).isNetworkAvailable()) {
+                    int onScreenItem = recyclerView.getChildCount();
+                    int visibleItem = gridLayoutManager.findFirstVisibleItemPosition();
+                    int totalItem = gridLayoutManager.getItemCount();
+                    if (currentPage <= lastPage && (totalItem - onScreenItem) <= (visibleItem + 4)) {
+                        currentPage++;
+                        updateMovieDataTask(recyclerView);
+
+                    }
+                }else {
+                    showNetworkError(recyclerView);
+                }
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+            }
+        };
+    }
+
+    private void hideNetworkError(RecyclerView recyclerView) {
+        recyclerView.setVisibility(View.VISIBLE);
+        findViewById(R.id.networkErrorConstrainLayout).setVisibility(View.GONE);
+    }
+
+    private void showNetworkError(RecyclerView recyclerView) {
+        recyclerView.setVisibility(View.GONE);
+        ConstraintLayout constraintLayout = findViewById(R.id.networkErrorConstrainLayout);
+        constraintLayout.setVisibility(View.VISIBLE);
+    }
+
+
 }
