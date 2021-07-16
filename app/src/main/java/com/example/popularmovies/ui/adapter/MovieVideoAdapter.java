@@ -1,6 +1,8 @@
 package com.example.popularmovies.ui.adapter;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,17 +32,16 @@ public class MovieVideoAdapter extends RecyclerView.Adapter<MovieVideoAdapter.Vi
 
     @Override
     public void onBindViewHolder(MovieVideoAdapter.ViewHolder holder, int position) {
-
-        holder.videoTextView.setText(movieVideosArrayList.get(position).getName());
-//        String baseUrl = context.getString(R.string.poster_base_url);
-//        String size = context.getString(R.string.default_size);
-//        String path = movieDataArrayList.get(position).getPosterPath();
-//        Picasso.get().load(baseUrl + size + path).placeholder(R.drawable.placeholder).resize(185, 900).into(holder.img);
-//        holder.itemView.setOnClickListener(v -> {
-//            Intent intent = new Intent(context.getApplicationContext(), MovieDetailsActivity.class);
-//            intent.putExtra(MovieDetailsActivity.MOVIE_DATA_KEY, movieDataArrayList.get(position));
-//            context.startActivity(intent);
-//        });
+        MovieVideoResult.MovieVideo movieVideo = movieVideosArrayList.get(position);
+        holder.videoTextView.setText(movieVideo.getName());
+        String url = context.getString(R.string.youtube_base_url) + movieVideo.getKey();
+        String youtubePackage = context.getString(R.string.youtube_package);
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setPackage(youtubePackage);
+            intent.setData(Uri.parse(url));
+            context.startActivity(intent);
+        });
     }
 
 
@@ -55,7 +56,6 @@ public class MovieVideoAdapter extends RecyclerView.Adapter<MovieVideoAdapter.Vi
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-
         TextView videoTextView;
 
         public ViewHolder(View view) {

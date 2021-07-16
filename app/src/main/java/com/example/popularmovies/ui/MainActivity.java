@@ -137,14 +137,7 @@ public class MainActivity extends AppCompatActivity {
             hideNetworkError(recyclerView);
 
             int orientation = getResources().getConfiguration().orientation;
-            int spanCount ;
-            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                // code for portrait mode
-                spanCount = 2;
-            } else {
-                // code for landscape mode
-                spanCount = 4;
-            }
+            int spanCount = orientation == Configuration.ORIENTATION_PORTRAIT ? 2 : 4;
             GridLayoutManager gridLayoutManager = new GridLayoutManager(getApplicationContext(), spanCount);
             recyclerView.setLayoutManager(gridLayoutManager);
             initMovieDataTask(recyclerView, gridLayoutManager);

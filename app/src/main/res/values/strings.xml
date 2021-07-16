@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Popular Movies</string>
-    <string name="movie_base_url">https://api.themoviedb.org/3/movie/%1$s</string>
+    <string name="youtube_package">com.google.android.youtube</string>
+    <string name="youtube_base_url">https://www.youtube.com/watch?v=</string>
     <string name="poster_base_url">https://image.tmdb.org/t/p/</string>
     <string name="default_size">w185</string>
     <string name="backdrop_size">w500</string>
