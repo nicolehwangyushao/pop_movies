@@ -1,6 +1,7 @@
 package com.example.popularmovies.service;
 
 import com.example.popularmovies.response.MovieResult;
+import com.example.popularmovies.response.MovieReviewResult;
 import com.example.popularmovies.response.MovieVideoResult;
 
 import retrofit2.Call;
@@ -14,4 +15,7 @@ public interface MovieApiClient {
 
     @GET("{movieId}/videos")
     Call<MovieVideoResult> getMovieVideo(@Path("movieId") int movieId);
+
+    @GET("{movieId}/reviews")
+    Call<MovieReviewResult> getMovieReview(@Path("movieId") int movieId, @Query("page") int page);
 }

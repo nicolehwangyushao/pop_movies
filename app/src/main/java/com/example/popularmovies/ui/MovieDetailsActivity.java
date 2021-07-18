@@ -1,7 +1,11 @@
 package com.example.popularmovies.ui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Adapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -11,10 +15,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.popularmovies.R;
 import com.example.popularmovies.response.MovieResult;
+import com.example.popularmovies.response.MovieReviewResult;
 import com.example.popularmovies.response.MovieVideoResult;
 import com.example.popularmovies.service.MovieApiClient;
 import com.example.popularmovies.service.RetrofitService;
-import com.example.popularmovies.ui.adapter.MoviePosterAdapter;
+import com.example.popularmovies.ui.adapter.MovieReviewAdapter;
 import com.example.popularmovies.ui.adapter.MovieVideoAdapter;
 import com.squareup.picasso.Picasso;
 
@@ -51,7 +56,8 @@ public class MovieDetailsActivity extends AppCompatActivity {
         rateTextView.setText(rate);
         TextView overviewTextView = findViewById(R.id.overviewTextView);
         overviewTextView.setText(overviewText);
-        RecyclerView recyclerView = findViewById(R.id.videoRecyclerView);
+        RecyclerView videoRecyclerView = findViewById(R.id.videoRecyclerView);
+        RecyclerView reviewRecyclerView = findViewById(R.id.reviewsRecyclerView);
 
         Picasso.get().load(baseUrl + backdropSize + movieData.getBackDropPath()).placeholder(R.drawable.placeholder).resize(1100, 350).
                 into((ImageView) findViewById(R.id.backDropPosterImageView));
@@ -59,9 +65,26 @@ public class MovieDetailsActivity extends AppCompatActivity {
         Picasso.get().load(baseUrl + posterSize + movieData.getPosterPath()).placeholder(R.drawable.placeholder).resize(300, 500).
                 into((ImageView) findViewById(R.id.posterImageView));
 
-        getMovieVideo(movieData.getMovieId(), recyclerView);
+        getMovieVideo(movieData.getMovieId(), videoRecyclerView);
+        getMovieReview(movieData.getMovieId(), reviewRecyclerView);
+
+    }
 
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_settings) {
+            startActivity(new Intent(this, Settings.class));
+            return true;
+        }
+        return false;
     }
 
     private void getMovieVideo(int movieId, RecyclerView recyclerView) {
@@ -82,6 +105,55 @@ public class MovieDetailsActivity extends AppCompatActivity {
             }
 
         });
+    }
+
+    private void getMovieReview(int movieId, RecyclerView recyclerView) {
+        Context context = this;
+        int currentPage = 1;
+        Call<MovieReviewResult> call = client.getMovieReview(movieId, currentPage);
+        call.enqueue(new Callback<MovieReviewResult>() {
+            @Override
+            public void onResponse(Call<MovieReviewResult> call, Response<MovieReviewResult> response) {
+                MovieReviewResult result = response.body();
+                int lastPage = result.getTotalPage();
+                ArrayList<MovieReviewResult.MovieReview> movieReviews = result.getResults();
+                MovieReviewAdapter reviewAdapter = new MovieReviewAdapter(movieReviews);
+                recyclerView.setAdapter(reviewAdapter);
+                recyclerView.setLayoutManager(new LinearLayoutManager(context));
+                if(lastPage > currentPage) {
+                    getMovieReview(movieId, reviewAdapter, lastPage, currentPage);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MovieReviewResult> call, Throwable t) {
+
+            }
+        });
+    }
+
+    private void getMovieReview(int movieId, MovieReviewAdapter adapter, int lastPage, int currentPage) {
+        if (lastPage > currentPage) {
+            Call<MovieReviewResult> call = client.getMovieReview(movieId, currentPage);
+            int nextPage = currentPage + 1;
+            call.enqueue(new Callback<MovieReviewResult>() {
+                @Override
+                public void onResponse(Call<MovieReviewResult> call, Response<MovieReviewResult> response) {
+                    MovieReviewResult result = response.body();
+                    int lastPage = result.getTotalPage();
+                    ArrayList<MovieReviewResult.MovieReview> movieReviews = result.getResults();
+                    adapter.insertMovieData(movieReviews);
+                    getMovieReview(movieId, adapter, lastPage, nextPage);
+                }
+
+                @Override
+                public void onFailure(Call<MovieReviewResult> call, Throwable t) {
+
+                }
+
+            });
+        }
+
     }
 
     @Override
