@@ -67,7 +67,17 @@
             app:layout_constraintLeft_toRightOf="@id/posterImageView"
             app:layout_constraintStart_toEndOf="@id/posterImageView"
             app:layout_constraintTop_toBottomOf="@id/releaseDateTextView" />
-
+        <Button
+            android:id="@+id/favoriteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:text="@string/favorite_button_text"
+            android:textColor="@color/primary_text"
+            app:layout_constraintRight_toRightOf="parent"
+            android:drawableLeft="@drawable/baseline_star_border_24"
+            app:layout_constraintLeft_toRightOf="@id/posterImageView"
+            app:layout_constraintTop_toBottomOf="@id/rateTextView"/>
         <TextView
             android:id="@+id/overviewTextView"
             android:layout_width="0dp"
@@ -76,9 +86,8 @@
             android:textColor="@color/primary_text"
             android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/posterImageView"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/posterImageView" />
+            app:layout_constraintTop_toBottomOf="@id/favoriteButton" />
 
 
         <TextView

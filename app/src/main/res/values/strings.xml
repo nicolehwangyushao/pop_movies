@@ -17,6 +17,7 @@
     <string name="network_error_text">Please Check Your Network Connection and Try Again</string>
     <string name="retry_button_text">Retry</string>
     <string name="video_trailers_title">Trailers</string>
+    <string name="favorite_button_text">Favorite</string>
     <string-array name="pref_sort_options">
         <item>@string/popularity</item>
         <item>@string/rate</item>

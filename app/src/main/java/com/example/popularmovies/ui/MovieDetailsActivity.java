@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Adapter;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -58,6 +60,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         overviewTextView.setText(overviewText);
         RecyclerView videoRecyclerView = findViewById(R.id.videoRecyclerView);
         RecyclerView reviewRecyclerView = findViewById(R.id.reviewsRecyclerView);
+        Button favoriteButton = findViewById(R.id.favoriteButton);
 
         Picasso.get().load(baseUrl + backdropSize + movieData.getBackDropPath()).placeholder(R.drawable.placeholder).resize(1100, 350).
                 into((ImageView) findViewById(R.id.backDropPosterImageView));
@@ -67,6 +70,12 @@ public class MovieDetailsActivity extends AppCompatActivity {
 
         getMovieVideo(movieData.getMovieId(), videoRecyclerView);
         getMovieReview(movieData.getMovieId(), reviewRecyclerView);
+        favoriteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                favoriteButton.setCompoundDrawablesWithIntrinsicBounds(getDrawable(R.drawable.baseline_star_black_24), null, null, null);
+            }
+        });
 
     }
 
@@ -120,7 +129,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
                 MovieReviewAdapter reviewAdapter = new MovieReviewAdapter(movieReviews);
                 recyclerView.setAdapter(reviewAdapter);
                 recyclerView.setLayoutManager(new LinearLayoutManager(context));
-                if(lastPage > currentPage) {
+                if (lastPage > currentPage) {
                     getMovieReview(movieId, reviewAdapter, lastPage, currentPage);
                 }
             }
