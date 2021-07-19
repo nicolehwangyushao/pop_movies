@@ -1,5 +1,6 @@
 package com.example.popularmovies.ui.adapter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -9,6 +10,8 @@ import android.widget.ImageView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.popularmovies.data.FavoriteMovieViewModel;
+import com.example.popularmovies.ui.MainActivity;
 import com.example.popularmovies.ui.MovieDetailsActivity;
 import com.example.popularmovies.R;
 import com.example.popularmovies.response.MovieResult;
@@ -19,10 +22,12 @@ import java.util.ArrayList;
 public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.ViewHolder> {
     private final ArrayList<MovieResult.MovieData> movieDataArrayList;
     private final Context context;
+    private final FavoriteMovieViewModel favoriteMovieViewModel;
 
-    public MoviePosterAdapter(ArrayList<MovieResult.MovieData> movieDataList, Context context) {
+    public MoviePosterAdapter(ArrayList<MovieResult.MovieData> movieDataList, Context context, FavoriteMovieViewModel favoriteMovieViewModel) {
         this.movieDataArrayList = movieDataList;
         this.context = context;
+        this.favoriteMovieViewModel = favoriteMovieViewModel;
     }
 
     @Override
@@ -36,12 +41,12 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
 
         String baseUrl = context.getString(R.string.poster_base_url);
         String size = context.getString(R.string.default_size);
-        String path = movieDataArrayList.get(position).getPosterPath();
-        Picasso.get().load(baseUrl + size + path).placeholder(R.drawable.placeholder).resize(185, 900).into(holder.img);
+        MovieResult.MovieData movieData = movieDataArrayList.get(position);
+        Picasso.get().load(baseUrl + size + movieData.getPosterPath()).placeholder(R.drawable.placeholder).resize(185, 900).into(holder.img);
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context.getApplicationContext(), MovieDetailsActivity.class);
             intent.putExtra(MovieDetailsActivity.MOVIE_DATA_KEY, movieDataArrayList.get(position));
-            context.startActivity(intent);
+            ((Activity)context).startActivityForResult(intent, MainActivity.NEW_FAVORITE_MOVIE_ACTIVITY_REQUEST_CODE);
         });
     }
 

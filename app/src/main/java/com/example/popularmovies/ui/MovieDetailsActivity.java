@@ -2,20 +2,24 @@ package com.example.popularmovies.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.popularmovies.R;
+import com.example.popularmovies.data.FavoriteMovieData;
+import com.example.popularmovies.data.FavoriteMovieViewModel;
+import com.example.popularmovies.data.ViewModelFactory;
 import com.example.popularmovies.response.MovieResult;
 import com.example.popularmovies.response.MovieReviewResult;
 import com.example.popularmovies.response.MovieVideoResult;
@@ -32,23 +36,26 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MovieDetailsActivity extends AppCompatActivity {
-    public final static String MOVIE_DATA_KEY = "movie_poster_key";
+    public final static String MOVIE_DATA_KEY = "movie_data_key";
     MovieApiClient client = new RetrofitService().getMovieApiClient();
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_details);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
+        
         MovieResult.MovieData movieData = (MovieResult.MovieData) getIntent().getSerializableExtra(MOVIE_DATA_KEY);
-
         String baseUrl = getString(R.string.poster_base_url);
         String backdropSize = getString(R.string.backdrop_size);
         String posterSize = getString(R.string.default_size);
         String releaseDate = getString(R.string.release_date_text, movieData.getReleaseDate());
         String rate = getString(R.string.rate_text, movieData.getVoteAverage());
         String overviewText = getString(R.string.overview_text, movieData.getOverview());
+        ViewModelFactory factory = new ViewModelFactory(getApplication());
+        FavoriteMovieViewModel mFavoriteMovieViewModel = new ViewModelProvider(this, factory).get(FavoriteMovieViewModel.class);
 
         TextView titleTextView = findViewById(R.id.titleTextView);
         titleTextView.setText(movieData.getTitle());
@@ -68,15 +75,41 @@ public class MovieDetailsActivity extends AppCompatActivity {
         Picasso.get().load(baseUrl + posterSize + movieData.getPosterPath()).placeholder(R.drawable.placeholder).resize(300, 500).
                 into((ImageView) findViewById(R.id.posterImageView));
 
-        getMovieVideo(movieData.getMovieId(), videoRecyclerView);
-        getMovieReview(movieData.getMovieId(), reviewRecyclerView);
-        favoriteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                favoriteButton.setCompoundDrawablesWithIntrinsicBounds(getDrawable(R.drawable.baseline_star_black_24), null, null, null);
+        int movieId = movieData.getMovieId();
+        getMovieVideo(movieId, videoRecyclerView);
+        getMovieReview(movieId, reviewRecyclerView);
+
+        boolean[] isFavorite = {false};
+        mFavoriteMovieViewModel.isMovieExist(movieId).observe(this, favoriteMovieData -> {
+            if (favoriteMovieData == null) {
+                isFavorite[0] = false;
+                setFavoriteButton(favoriteButton, false);
+            } else {
+                isFavorite[0] = true;
+                setFavoriteButton(favoriteButton, true);
             }
         });
 
+        favoriteButton.setOnClickListener(v -> {
+            isFavorite[0] = !isFavorite[0];
+            FavoriteMovieData favoriteMovieData = new FavoriteMovieData(movieId, movieData.getPosterPath(),
+                    movieData.getBackDropPath(), movieData.getTitle(), movieData.getOverview(), movieData.getVoteAverage(),
+                    movieData.getReleaseDate());
+            if (isFavorite[0]) {
+                mFavoriteMovieViewModel.insert(favoriteMovieData);
+            } else {
+                mFavoriteMovieViewModel.delete(favoriteMovieData);
+            }
+        });
+
+    }
+
+    public void setFavoriteButton(Button button, boolean isFavorite) {
+        if (isFavorite) {
+            button.setCompoundDrawablesWithIntrinsicBounds(getDrawable(R.drawable.baseline_star_black_24), null, null, null);
+        } else {
+            button.setCompoundDrawablesWithIntrinsicBounds(getDrawable(R.drawable.baseline_star_border_24), null, null, null);
+        }
     }
 
 

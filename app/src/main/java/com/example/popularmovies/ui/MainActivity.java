@@ -4,24 +4,29 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.popularmovies.R;
-import com.example.popularmovies.ui.adapter.MoviePosterAdapter;
+import com.example.popularmovies.data.FavoriteMovieViewModel;
+import com.example.popularmovies.data.ViewModelFactory;
 import com.example.popularmovies.response.MovieResult;
 import com.example.popularmovies.service.MovieApiClient;
 import com.example.popularmovies.service.NetworkManager;
 import com.example.popularmovies.service.RetrofitService;
+import com.example.popularmovies.ui.adapter.MoviePosterAdapter;
 
 import java.util.ArrayList;
 
@@ -30,22 +35,52 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
+    public static final int NEW_FAVORITE_MOVIE_ACTIVITY_REQUEST_CODE = 1;
     int currentPage = 1;
     MoviePosterAdapter adapter;
     int lastPage = -1;
     MovieApiClient client = new RetrofitService().getMovieApiClient();
+    private FavoriteMovieViewModel mFavoriteMovieViewModel;
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        ViewModelFactory factory = new ViewModelFactory(getApplication());
+        mFavoriteMovieViewModel = new ViewModelProvider(this, factory).get(FavoriteMovieViewModel.class);
+//        mFavoriteMovieViewModel.deleteAll();
+        mFavoriteMovieViewModel.getFavoriteMovieList().observe(this, movie -> {
+            movie.forEach(data -> System.out.println(data.getTitle() + data.getMovieId()));
+        });
+//        System.out.println(mFavoriteMovieViewModel.isMovieExist(459151));
         execInitMovieDataTask();
         Button retry = findViewById(R.id.retryButton);
         retry.setOnClickListener(v -> execInitMovieDataTask());
 
-
     }
+
+//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//
+//        if (requestCode == NEW_FAVORITE_MOVIE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
+//            MovieResult.MovieData movieData = (MovieResult.MovieData) data.getSerializableExtra(MovieDetailsActivity.MOVIE_DATA_KEY);
+//
+//            FavoriteMovieData favoriteMovieData = new FavoriteMovieData(movieData.getMovieId(), movieData.getPosterPath(), movieData.getBackDropPath(),
+//                    movieData.getTitle(), movieData.getOverview(), movieData.getVoteAverage(), movieData.getReleaseDate());
+//            Toast.makeText(
+//                    getApplicationContext(),
+//                    String.valueOf(mFavoriteMovieViewModel.isMovieExist(movieData.getMovieId())),
+//                    Toast.LENGTH_LONG).show();
+//            mFavoriteMovieViewModel.insert(favoriteMovieData);
+//            System.out.println(mFavoriteMovieViewModel.isMovieExist(movieData.getMovieId()));
+//        } else {
+//            Toast.makeText(
+//                    getApplicationContext(),
+//                    "noo",
+//                    Toast.LENGTH_LONG).show();
+//        }
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -87,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
                 MovieResult result = response.body();
                 ArrayList<MovieResult.MovieData> movieDataArrayList = result.getResults();
                 hideNetworkError(recyclerView);
-                adapter = new MoviePosterAdapter(movieDataArrayList, context);
+                adapter = new MoviePosterAdapter(movieDataArrayList, context, mFavoriteMovieViewModel);
                 recyclerView.setAdapter(adapter);
                 recyclerView.addOnScrollListener(getListener(gridLayoutManager));
                 lastPage = result.getTotalPage();
@@ -161,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
                         currentPage++;
                         updateMovieDataTask(recyclerView);
                     }
-                }else {
+                } else {
                     showNetworkError(recyclerView);
                 }
             }

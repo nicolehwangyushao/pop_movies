@@ -19,7 +19,7 @@ public class MovieResult {
         return totalPage;
     }
 
-    public class MovieData implements Serializable {
+    public static class MovieData implements Serializable {
         @SerializedName("id")
         private int movieId;
         @SerializedName("poster_path")
