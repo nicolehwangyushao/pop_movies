@@ -1,6 +1,5 @@
 package com.example.popularmovies.ui.adapter;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -10,11 +9,9 @@ import android.widget.ImageView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.popularmovies.data.FavoriteMovieViewModel;
-import com.example.popularmovies.ui.MainActivity;
-import com.example.popularmovies.ui.MovieDetailsActivity;
 import com.example.popularmovies.R;
 import com.example.popularmovies.response.MovieResult;
+import com.example.popularmovies.ui.MovieDetailsActivity;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -52,6 +49,7 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
     public void insertMovieData(ArrayList<MovieResult.MovieData> addData) {
         movieDataArrayList.addAll(addData);
     }
+
 
     @Override
     public int getItemCount() {

@@ -129,6 +129,8 @@ public class MovieDetailsActivity extends AppCompatActivity {
         return false;
     }
 
+
+
     private void getMovieVideo(int movieId, RecyclerView recyclerView) {
         Context context = this;
         Call<MovieVideoResult> call = client.getMovieVideo(movieId);
@@ -201,6 +203,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();
+        finish();
         return true;
     }
 }

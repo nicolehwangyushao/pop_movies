@@ -92,17 +92,17 @@ public class MovieResult {
             return overview;
         }
 
-//        @Override
-//        public boolean equals(Object o) {
-//            if (this == o) return true;
-//            if (o == null || getClass() != o.getClass()) return false;
-//            MovieData movieData = (MovieData) o;
-//            return movieId == movieData.movieId;
-//        }
-//
-//        @Override
-//        public int hashCode() {
-//            return Objects.hash(movieId);
-//        }
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            MovieData movieData = (MovieData) o;
+            return movieId == movieData.movieId;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(movieId);
+        }
     }
 }

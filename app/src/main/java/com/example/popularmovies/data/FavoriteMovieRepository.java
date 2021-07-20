@@ -24,13 +24,6 @@ public class FavoriteMovieRepository {
     LiveData<FavoriteMovieData> isMovieExist(int movieId) {
         return mFavoriteMovieDao.findByMovieId(movieId);
     }
-//    LiveData<List<Integer>> allMovies() {
-//        List<Integer> list = new ArrayList<>();
-//        FavoriteMovieDatabase.databaseWriteExecutor.execute(() -> {
-//            list.addAll(mFavoriteMovieDao.getAllMoviesId());
-//        });
-//        return list;
-//    }
 
     void insert(FavoriteMovieData movieData) {
         FavoriteMovieDatabase.databaseWriteExecutor.execute(() -> {
