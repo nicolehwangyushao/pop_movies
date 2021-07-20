@@ -10,6 +10,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/movieDetailsConstraint"
+        android:layout_width="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_height="wrap_content">
+
+
         <ImageView
             android:id="@+id/backDropPosterImageView"
             android:layout_width="match_parent"
@@ -67,17 +74,20 @@
             app:layout_constraintLeft_toRightOf="@id/posterImageView"
             app:layout_constraintStart_toEndOf="@id/posterImageView"
             app:layout_constraintTop_toBottomOf="@id/releaseDateTextView" />
+
         <Button
             android:id="@+id/favoriteButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
+            android:drawableLeft="@drawable/baseline_star_border_24"
             android:text="@string/favorite_button_text"
             android:textColor="@color/primary_text"
-            app:layout_constraintRight_toRightOf="parent"
-            android:drawableLeft="@drawable/baseline_star_border_24"
             app:layout_constraintLeft_toRightOf="@id/posterImageView"
-            app:layout_constraintTop_toBottomOf="@id/rateTextView"/>
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/rateTextView" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
         <TextView
             android:id="@+id/overviewTextView"
             android:layout_width="0dp"
@@ -87,17 +97,17 @@
             android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/posterImageView" />
+            app:layout_constraintTop_toBottomOf="@id/movieDetailsConstraint" />
 
 
         <TextView
             android:id="@+id/trailersTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/video_trailers_title"
-            android:textSize="22sp"
             android:layout_marginTop="10dp"
+            android:text="@string/video_trailers_title"
             android:textColor="@color/primary_text"
+            android:textSize="22sp"
             app:layout_constraintTop_toBottomOf="@id/overviewTextView" />
 
         <View
@@ -112,19 +122,20 @@
             android:id="@+id/videoRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/line" />
 
         <TextView
             android:id="@+id/reviewsTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Reviews"
-            android:textSize="22sp"
             android:layout_marginTop="10dp"
+            android:text="Reviews"
             android:textColor="@color/primary_text"
+            android:textSize="22sp"
             app:layout_constraintTop_toBottomOf="@id/videoRecyclerView" />
+
         <View
             android:id="@+id/line2"
             android:layout_width="match_parent"
@@ -132,12 +143,13 @@
             android:layout_marginTop="10dp"
             android:background="@color/grey"
             app:layout_constraintTop_toBottomOf="@id/reviewsTextView" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/reviewsRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/line2" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>
