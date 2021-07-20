@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     int lastPage = -1;
     MovieApiClient client = new RetrofitService().getMovieApiClient();
     private FavoriteMovieViewModel mFavoriteMovieViewModel;
-
+    ArrayList<MovieResult.MovieData> favoriteMovieDataArrayList = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,37 +50,63 @@ public class MainActivity extends AppCompatActivity {
         ViewModelFactory factory = new ViewModelFactory(getApplication());
         mFavoriteMovieViewModel = new ViewModelProvider(this, factory).get(FavoriteMovieViewModel.class);
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigation);
+        mFavoriteMovieViewModel.getFavoriteMovieList().observe(this, movies -> {
+            getMovieData(favoriteMovieDataArrayList, movies);
+        });
+
+        //check initial bottom navigation selected item
+        switch (bottomNavigationView.getSelectedItemId()) {
+            case R.id.mainPage:
+                execInitMovieDataTask();
+                break;
+            case R.id.favoritePage:
+                RecyclerView recyclerView = findViewById(R.id.recyclerView);
+                if (favoriteMovieDataArrayList.isEmpty()) {
+                    showFavoriteEmpty(recyclerView);
+                } else {
+                    adapter = new MoviePosterAdapter(favoriteMovieDataArrayList, this);
+                    recyclerView.clearOnScrollListeners();
+                    recyclerView.setAdapter(adapter);
+                }
+                break;
+        }
+
         bottomNavigationView.setOnItemSelectedListener(item -> {
             switch (item.getItemId()) {
                 case R.id.mainPage:
                     execInitMovieDataTask();
-                    return true;
+                    break;
                 case R.id.favoritePage:
                     RecyclerView recyclerView = findViewById(R.id.recyclerView);
-                    mFavoriteMovieViewModel.getFavoriteMovieList().observe(this, movies -> {
-                        if (movies.isEmpty()) {
-                            showFavoriteEmpty(recyclerView);
-                        } else {
-                            hideFavoriteEmpty(recyclerView);
-                            ArrayList<MovieResult.MovieData> movieDataArrayList = getMovieData(movies);
-                            adapter = new MoviePosterAdapter(movieDataArrayList, this);
+                    hideNetworkError(recyclerView);
+                    if (favoriteMovieDataArrayList.isEmpty()) {
+                        showFavoriteEmpty(recyclerView);
+                    } else {
+                        adapter = new MoviePosterAdapter(favoriteMovieDataArrayList, this);
+                        recyclerView.clearOnScrollListeners();
+                        recyclerView.setAdapter(adapter);
+                        if(recyclerView.getLayoutManager() == null) {
+                            int orientation = getResources().getConfiguration().orientation;
+                            int spanCount = orientation == Configuration.ORIENTATION_PORTRAIT ? 2 : 4;
+                            GridLayoutManager gridLayoutManager = new GridLayoutManager(getApplicationContext(), spanCount);
+                            recyclerView.setLayoutManager(gridLayoutManager);
                         }
-                    });
-                    recyclerView.setAdapter(adapter);
-                    return true;
+                    }
+                    break;
+
             }
-            return false;
+            return true;
         });
 
-        execInitMovieDataTask();
+
+
         Button retry = findViewById(R.id.retryButton);
         retry.setOnClickListener(v -> execInitMovieDataTask());
 
     }
 
-    @NotNull
-    private ArrayList<MovieResult.MovieData> getMovieData(java.util.List<FavoriteMovieData> movies) {
-        ArrayList<MovieResult.MovieData> movieDataArrayList = new ArrayList<>();
+    private void getMovieData(ArrayList<MovieResult.MovieData> movieDataArrayList, java.util.List<FavoriteMovieData> movies) {
+        movieDataArrayList.clear();
         for (int i = 0; i < movies.size(); i++) {
             FavoriteMovieData favoriteMovieData = movies.get(i);
             MovieResult.MovieData movieData = new MovieResult.MovieData();
@@ -92,8 +118,8 @@ public class MainActivity extends AppCompatActivity {
             movieData.setVoteAverage(favoriteMovieData.getVoteAverage());
             movieData.setOverview(favoriteMovieData.getOverview());
             movieDataArrayList.add(movieData);
+
         }
-        return movieDataArrayList;
     }
 
     @Override
@@ -110,13 +136,6 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return false;
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        execInitMovieDataTask();
-
     }
 
     @Override
@@ -139,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
                 hideFavoriteEmpty(recyclerView);
                 adapter = new MoviePosterAdapter(movieDataArrayList, context);
                 recyclerView.setAdapter(adapter);
-//                recyclerView.addOnScrollListener(getListener(gridLayoutManager));
+                recyclerView.addOnScrollListener(getListener(gridLayoutManager));
                 lastPage = result.getTotalPage();
 
             }
@@ -185,7 +204,6 @@ public class MainActivity extends AppCompatActivity {
 
         if (new NetworkManager(this).isNetworkAvailable()) {
             hideNetworkError(recyclerView);
-
             int orientation = getResources().getConfiguration().orientation;
             int spanCount = orientation == Configuration.ORIENTATION_PORTRAIT ? 2 : 4;
             GridLayoutManager gridLayoutManager = new GridLayoutManager(getApplicationContext(), spanCount);
@@ -229,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showNetworkError(RecyclerView recyclerView) {
-        adapter = null;
+        hideFavoriteEmpty(recyclerView);
         recyclerView.setVisibility(View.GONE);
         ConstraintLayout constraintLayout = findViewById(R.id.networkErrorConstrainLayout);
         constraintLayout.setVisibility(View.VISIBLE);
@@ -241,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showFavoriteEmpty(RecyclerView recyclerView) {
-        adapter = null;
+        hideNetworkError(recyclerView);
         recyclerView.setVisibility(View.GONE);
         ConstraintLayout constraintLayout = findViewById(R.id.emptyFavorite);
         constraintLayout.setVisibility(View.VISIBLE);
