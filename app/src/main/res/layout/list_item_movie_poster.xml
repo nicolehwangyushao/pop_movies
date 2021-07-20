@@ -12,6 +12,5 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         android:scaleType="fitXY"
-
         />
 </androidx.constraintlayout.widget.ConstraintLayout>

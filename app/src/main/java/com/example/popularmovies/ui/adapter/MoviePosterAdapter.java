@@ -22,12 +22,10 @@ import java.util.ArrayList;
 public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.ViewHolder> {
     private final ArrayList<MovieResult.MovieData> movieDataArrayList;
     private final Context context;
-    private final FavoriteMovieViewModel favoriteMovieViewModel;
 
-    public MoviePosterAdapter(ArrayList<MovieResult.MovieData> movieDataList, Context context, FavoriteMovieViewModel favoriteMovieViewModel) {
+    public MoviePosterAdapter(ArrayList<MovieResult.MovieData> movieDataList, Context context) {
         this.movieDataArrayList = movieDataList;
         this.context = context;
-        this.favoriteMovieViewModel = favoriteMovieViewModel;
     }
 
     @Override
@@ -46,7 +44,7 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context.getApplicationContext(), MovieDetailsActivity.class);
             intent.putExtra(MovieDetailsActivity.MOVIE_DATA_KEY, movieDataArrayList.get(position));
-            ((Activity)context).startActivityForResult(intent, MainActivity.NEW_FAVORITE_MOVIE_ACTIVITY_REQUEST_CODE);
+            context.startActivity(intent);
         });
     }
 

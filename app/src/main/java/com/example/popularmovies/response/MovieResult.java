@@ -35,6 +35,34 @@ public class MovieResult {
         @SerializedName("release_date")
         private String releaseDate;
 
+        public void setMovieId(int movieId) {
+            this.movieId = movieId;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        public void setPosterPath(String posterPath) {
+            this.posterPath = posterPath;
+        }
+
+        public void setBackDropPath(String backDropPath) {
+            this.backDropPath = backDropPath;
+        }
+
+        public void setReleaseDate(String releaseDate) {
+            this.releaseDate = releaseDate;
+        }
+
+        public void setVoteAverage(String voteAverage) {
+            this.voteAverage = voteAverage;
+        }
+
+        public void setOverview(String overview) {
+            this.overview = overview;
+        }
+
         public int getMovieId() {
             return movieId;
         }

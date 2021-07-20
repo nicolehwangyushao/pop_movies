@@ -18,6 +18,9 @@
     <string name="retry_button_text">Retry</string>
     <string name="video_trailers_title">Trailers</string>
     <string name="favorite_button_text">Favorite</string>
+    <string name="no_favorite_text">NO FAVORITE ADD</string>
+    <string name="bottom_navi_movie">Movies</string>
+    <string name="bottom_navi_favorite">Favorites</string>
     <string-array name="pref_sort_options">
         <item>@string/popularity</item>
         <item>@string/rate</item>
