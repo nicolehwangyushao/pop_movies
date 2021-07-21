@@ -101,8 +101,8 @@ public class MainActivity extends AppCompatActivity {
                         execInitMovieDataTask();
                     } else {
                         if (mMovieState != null) {
-                            recyclerView.setLayoutManager(movieGridLayoutManager);
                             movieGridLayoutManager.onRestoreInstanceState(mMovieState);
+                            recyclerView.setLayoutManager(movieGridLayoutManager);
                         }
                     }
 
@@ -111,19 +111,18 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case R.id.favoritePage:
                     mMovieState = movieGridLayoutManager.onSaveInstanceState();
+                    recyclerView.setLayoutManager(favoriteGridLayoutManager);
                     hideNetworkError();
                     if (favoriteMovieAdapter.getCurrentList().isEmpty()) {
                         showFavoriteEmpty();
                     } else {
                         if (mFavoriteState != null) {
-                            recyclerView.setLayoutManager(favoriteGridLayoutManager);
                             favoriteGridLayoutManager.onRestoreInstanceState(mFavoriteState);
                         }
                     }
                     recyclerView.clearOnScrollListeners();
                     recyclerView.setAdapter(favoriteMovieAdapter);
                     break;
-
 
             }
             return true;
