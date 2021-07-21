@@ -189,8 +189,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         if (savedInstanceState != null) {
-            mMovieState = savedInstanceState.getParcelable(SAVE_MOVIE_STATE_KEY);
-            mFavoriteState = savedInstanceState.getParcelable(SAVE_FAVORITE_STATE_KEY);
+            Parcelable movie = savedInstanceState.getParcelable(SAVE_MOVIE_STATE_KEY);
+            Parcelable favorite = savedInstanceState.getParcelable(SAVE_FAVORITE_STATE_KEY);
+            if (movie != null) mMovieState = movie;
+            if (favorite != null) mFavoriteState = favorite;
             int savePage = savedInstanceState.getInt(SAVE_MOVIE_PAGE_KEY);
 //            if (currentPage < savePage ) {
 //                for (int i = currentPage + 1; i <= savePage; i++){
@@ -204,8 +206,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(@NonNull @NotNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable(SAVE_MOVIE_STATE_KEY, movieGridLayoutManager.onSaveInstanceState());
-        outState.putParcelable(SAVE_FAVORITE_STATE_KEY, favoriteGridLayoutManager.onSaveInstanceState());
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigation);
+        switch (bottomNavigationView.getSelectedItemId()) {
+            case R.id.mainPage:
+                outState.putParcelable(SAVE_MOVIE_STATE_KEY, movieGridLayoutManager.onSaveInstanceState());
+                outState.putParcelable(SAVE_FAVORITE_STATE_KEY, mFavoriteState);
+                break;
+            case R.id.favoritePage:
+                outState.putParcelable(SAVE_FAVORITE_STATE_KEY, favoriteGridLayoutManager.onSaveInstanceState());
+                outState.putParcelable(SAVE_MOVIE_STATE_KEY, mMovieState);
+                break;
+        }
         outState.putInt(SAVE_MOVIE_PAGE_KEY, currentPage);
     }
 
