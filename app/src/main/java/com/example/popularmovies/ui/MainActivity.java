@@ -5,11 +5,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.lifecycle.ViewModelProvider;
@@ -37,16 +39,21 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-    int currentPage = 1;
-    int lastPage = -1;
-    FavoriteMovieAdapter favoriteMovieAdapter;
-    MoviePosterAdapter adapter;
-    MovieApiClient client = new RetrofitService().getMovieApiClient();
-    RecyclerView recyclerView;
-    GridLayoutManager favoriteGridLayoutManager;
-    GridLayoutManager movieGridLayoutManager;
-    String sort;
+    private static final String SAVE_MOVIE_STATE_KEY = "save_movie_state";
+    private static final String SAVE_FAVORITE_STATE_KEY = "save_favorite_state";
+    private static final String SAVE_MOVIE_PAGE_KEY = "save_movie_page";
+    private int currentPage = 1;
+    private int lastPage = -1;
+    private FavoriteMovieAdapter favoriteMovieAdapter;
+    private MoviePosterAdapter adapter;
+    private final MovieApiClient client = new RetrofitService().getMovieApiClient();
+    private RecyclerView recyclerView;
+    private GridLayoutManager favoriteGridLayoutManager;
+    private GridLayoutManager movieGridLayoutManager;
+    private String sort;
     private FavoriteMovieViewModel mFavoriteMovieViewModel;
+    private Parcelable mMovieState;
+    private Parcelable mFavoriteState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigation);
         favoriteMovieAdapter = new FavoriteMovieAdapter(new FavoriteMovieAdapter.FavoriteMovieDiff(), this);
         favoriteGridLayoutManager = getGridLayoutManager();
+        movieGridLayoutManager = getGridLayoutManager();
         recyclerView = findViewById(R.id.recyclerView);
         mFavoriteMovieViewModel.getFavoriteMovieList().observe(this, movies -> {
             if (movies.isEmpty() && bottomNavigationView.getSelectedItemId() == R.id.favoritePage) {
@@ -70,30 +78,49 @@ public class MainActivity extends AppCompatActivity {
         //check initial bottom navigation selected item
         switch (bottomNavigationView.getSelectedItemId()) {
             case R.id.mainPage:
-                execInitMovieDataTask();
+                recyclerView.setLayoutManager(movieGridLayoutManager);
                 break;
             case R.id.favoritePage:
                 recyclerView.clearOnScrollListeners();
                 recyclerView.setAdapter(favoriteMovieAdapter);
+                recyclerView.setLayoutManager(favoriteGridLayoutManager);
                 break;
         }
 
         bottomNavigationView.setOnItemSelectedListener(item -> {
             switch (item.getItemId()) {
                 case R.id.mainPage:
+                    mFavoriteState = favoriteGridLayoutManager.onSaveInstanceState();
                     hideFavoriteEmpty();
+                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+                    String currentSort = sharedPreferences.getString(this.getString(R.string.sort_key), this.getString(R.string.sort_by_default));
+                    if (!currentSort.equals(sort)) {
+                        sort = currentSort;
+                        execInitMovieDataTask();
+                    } else {
+                        if (mMovieState != null) {
+                            recyclerView.setLayoutManager(movieGridLayoutManager);
+                            movieGridLayoutManager.onRestoreInstanceState(mMovieState);
+                            mMovieState = null;
+                        }
+                    }
+
                     recyclerView.addOnScrollListener(getListener(movieGridLayoutManager));
                     recyclerView.setAdapter(adapter);
                     break;
                 case R.id.favoritePage:
+                    mMovieState = movieGridLayoutManager.onSaveInstanceState();
                     hideNetworkError();
+                    recyclerView.setLayoutManager(favoriteGridLayoutManager);
                     if (favoriteMovieAdapter.getCurrentList().isEmpty()) {
                         showFavoriteEmpty();
                     } else {
+                        if (mFavoriteState != null) {
+                            favoriteGridLayoutManager.onRestoreInstanceState(mFavoriteState);
+                            mFavoriteState = null;
+                        }
                         recyclerView.clearOnScrollListeners();
                         recyclerView.setAdapter(favoriteMovieAdapter);
-                        recyclerView.setLayoutManager(favoriteGridLayoutManager);
-
                         break;
                     }
 
@@ -121,12 +148,52 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String currentSort = sharedPreferences.getString(this.getString(R.string.sort_key), this.getString(R.string.sort_by_default));
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigation);
-        if (bottomNavigationView.getSelectedItemId() == R.id.mainPage && !currentSort.equals(sort)) {
-            execInitMovieDataTask();
+        switch (bottomNavigationView.getSelectedItemId()) {
+            case R.id.mainPage:
+                if (!currentSort.equals(sort)) {
+                    sort = currentSort;
+                    execInitMovieDataTask();
+                } else {
+                    if (mMovieState != null) {
+                        movieGridLayoutManager.onRestoreInstanceState(mMovieState);
+                        recyclerView.setLayoutManager(movieGridLayoutManager);
+                        mMovieState = null;
+                    }
+                }
+                break;
+            case R.id.favoritePage:
+                if (mFavoriteState != null) {
+                    favoriteGridLayoutManager.onRestoreInstanceState(mFavoriteState);
+                    recyclerView.setLayoutManager(favoriteGridLayoutManager);
+                    mFavoriteState = null;
+                }
         }
 
     }
 
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            mMovieState = savedInstanceState.getParcelable(SAVE_MOVIE_STATE_KEY);
+            mFavoriteState = savedInstanceState.getParcelable(SAVE_FAVORITE_STATE_KEY);
+            int savePage = savedInstanceState.getInt(SAVE_MOVIE_PAGE_KEY);
+            if (currentPage < savePage ) {
+                for (int i = currentPage + 1; i <= savePage; i++){
+                    updateMovieDataTask(i);
+                }
+            }
+        }
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull @NotNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(SAVE_MOVIE_STATE_KEY, movieGridLayoutManager.onSaveInstanceState());
+        outState.putParcelable(SAVE_FAVORITE_STATE_KEY, favoriteGridLayoutManager.onSaveInstanceState());
+        outState.putInt(SAVE_MOVIE_PAGE_KEY, currentPage);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -147,7 +214,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        adapter = null;
     }
 
     private void initMovieDataTask(RecyclerView recyclerView, GridLayoutManager gridLayoutManager) {
@@ -176,11 +242,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void updateMovieDataTask() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String sort = sharedPreferences.getString(this.getString(R.string.sort_key), this.getString(R.string.sort_by_default));
+    private void updateMovieDataTask(int page) {
+
         final int itemCount = 20;
-        Call<MovieResult> call = client.getMoviesList(sort, currentPage);
+        Call<MovieResult> call = client.getMoviesList(sort, page);
         call.enqueue(new Callback<MovieResult>() {
             @Override
             public void onResponse(Call<MovieResult> call, Response<MovieResult> response) {
@@ -188,9 +253,9 @@ public class MainActivity extends AppCompatActivity {
                 ArrayList<MovieResult.MovieData> movieDataArrayList = result.getResults();
                 hideNetworkError();
                 adapter.insertMovieData(movieDataArrayList);
-                adapter.notifyItemRangeInserted(currentPage * itemCount - 1, itemCount);
+                adapter.notifyItemRangeInserted(page * itemCount - 1, itemCount);
+                currentPage = page;
                 lastPage = result.getTotalPage();
-
             }
 
             @Override
@@ -209,7 +274,6 @@ public class MainActivity extends AppCompatActivity {
 
         if (new NetworkManager(this).isNetworkAvailable()) {
             hideNetworkError();
-            movieGridLayoutManager = getGridLayoutManager();
             recyclerView.setLayoutManager(movieGridLayoutManager);
             initMovieDataTask(recyclerView, movieGridLayoutManager);
 
@@ -229,8 +293,8 @@ public class MainActivity extends AppCompatActivity {
                     int visibleItem = gridLayoutManager.findFirstVisibleItemPosition();
                     int totalItem = gridLayoutManager.getItemCount();
                     if (currentPage <= lastPage && (totalItem - onScreenItem) <= (visibleItem + 4)) {
-                        currentPage++;
-                        updateMovieDataTask();
+                        int getPage = currentPage + 1;
+                        updateMovieDataTask(getPage);
                     }
                 } else {
                     showNetworkError();
