@@ -20,8 +20,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.popularmovies.R;
-import com.example.popularmovies.data.FavoriteMovieViewModel;
-import com.example.popularmovies.data.ViewModelFactory;
+import com.example.popularmovies.viewmodel.FavoriteMovieViewModel;
+import com.example.popularmovies.viewmodel.ViewModelFactory;
 import com.example.popularmovies.response.MovieResult;
 import com.example.popularmovies.service.MovieApiClient;
 import com.example.popularmovies.service.NetworkManager;

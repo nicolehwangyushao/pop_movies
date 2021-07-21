@@ -1,9 +1,12 @@
-package com.example.popularmovies.data;
+package com.example.popularmovies.viewmodel;
 
 import android.app.Application;
 
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+
+import com.example.popularmovies.data.FavoriteMovieData;
+import com.example.popularmovies.viewmodel.FavoriteMovieRepository;
 
 import java.util.List;
 
