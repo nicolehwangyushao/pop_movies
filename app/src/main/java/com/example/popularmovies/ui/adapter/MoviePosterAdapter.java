@@ -7,21 +7,27 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.popularmovies.R;
+import com.example.popularmovies.data.FavoriteMovieData;
 import com.example.popularmovies.response.MovieResult;
 import com.example.popularmovies.ui.MovieDetailsActivity;
 import com.squareup.picasso.Picasso;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 
-public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.ViewHolder> {
-    private final ArrayList<MovieResult.MovieData> movieDataArrayList;
+public class MoviePosterAdapter extends ListAdapter<MovieResult.MovieData, MoviePosterAdapter.ViewHolder> {
+//    private final ArrayList<MovieResult.MovieData> movieDataArrayList;
     private final Context context;
 
-    public MoviePosterAdapter(ArrayList<MovieResult.MovieData> movieDataList, Context context) {
-        this.movieDataArrayList = movieDataList;
+    public MoviePosterAdapter(@NonNull DiffUtil.ItemCallback<MovieResult.MovieData> diffCallback, Context context) {
+        super(diffCallback);
         this.context = context;
     }
 
@@ -36,30 +42,28 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
 
         String baseUrl = context.getString(R.string.poster_base_url);
         String size = context.getString(R.string.default_size);
-        MovieResult.MovieData movieData = movieDataArrayList.get(position);
+        MovieResult.MovieData movieData = getItem(position);
         Picasso.get().load(baseUrl + size + movieData.getPosterPath()).placeholder(R.drawable.placeholder).resize(185, 900).into(holder.img);
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context.getApplicationContext(), MovieDetailsActivity.class);
-            intent.putExtra(MovieDetailsActivity.MOVIE_DATA_KEY, movieDataArrayList.get(position));
+            intent.putExtra(MovieDetailsActivity.MOVIE_DATA_KEY, movieData);
             context.startActivity(intent);
         });
     }
 
+    public static class MovieDiff extends DiffUtil.ItemCallback<MovieResult.MovieData> {
 
-    public void insertMovieData(ArrayList<MovieResult.MovieData> addData) {
-        movieDataArrayList.addAll(addData);
+        @Override
+        public boolean areItemsTheSame(@NonNull @NotNull MovieResult.MovieData oldItem, @NonNull @NotNull MovieResult.MovieData newItem) {
+            return oldItem == newItem;
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull @NotNull MovieResult.MovieData oldItem, @NonNull @NotNull MovieResult.MovieData newItem) {
+            return oldItem.getMovieId() == newItem.getMovieId();
+        }
     }
 
-
-    @Override
-    public int getItemCount() {
-        return movieDataArrayList.size();
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return super.getItemId(position);
-    }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
