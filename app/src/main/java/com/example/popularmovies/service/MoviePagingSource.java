@@ -49,7 +49,7 @@ public class MoviePagingSource extends RxPagingSource<Integer, MovieResult.Movie
                     .subscribeOn(Schedulers.io())
                     .map(MovieResult::getResults)
                     .map(results -> toLoadResult(results, page))
-                    .onErrorReturn(e -> new LoadResult.Error((Throwable) e));
+                    .onErrorReturn(LoadResult.Error::new);
         } catch (Exception e) {
             return Single.just(new LoadResult.Error(e));
         }

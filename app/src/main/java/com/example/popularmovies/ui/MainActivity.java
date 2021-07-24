@@ -9,9 +9,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.paging.LoadState;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 
@@ -26,8 +26,6 @@ import com.example.popularmovies.viewmodel.FavoriteMovieViewModelFactory;
 import com.example.popularmovies.viewmodel.MovieViewModel;
 import com.example.popularmovies.viewmodel.MovieViewModelFactory;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-
-import org.jetbrains.annotations.NotNull;
 
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -63,7 +61,6 @@ public class MainActivity extends AppCompatActivity {
         favoriteGridLayoutManager = getGridLayoutManager();
         movieGridLayoutManager = getGridLayoutManager();
 
-
         mFavoriteMovieViewModel.getFavoriteMovieList().observe(this, movies -> {
             if (movies.isEmpty() && binding.bottomNavigation.getSelectedItemId() == R.id.favoritePage) {
                 showFavoriteEmpty();
@@ -73,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
             favoriteMovieAdapter.submitList(movies);
         });
 
-
         //check initial bottom navigation selected item
         switch (binding.bottomNavigation.getSelectedItemId()) {
             case R.id.mainPage:
@@ -81,6 +77,16 @@ public class MainActivity extends AppCompatActivity {
                 mMovieViewModel.getMovieResult(currentSort).subscribe(result -> adapter.submitData(getLifecycle(), result));
                 binding.recyclerView.setLayoutManager(movieGridLayoutManager);
                 binding.recyclerView.setAdapter(adapter);
+                adapter.addLoadStateListener(loadStates -> {
+                    if (loadStates.getPrepend() instanceof LoadState.Error ||
+                            loadStates.getAppend() instanceof LoadState.Error ||
+                            loadStates.getRefresh() instanceof LoadState.Error) {
+                        showNetworkError();
+                    } else {
+                        hideNetworkError();
+                    }
+                    return null;
+                });
                 break;
             case R.id.favoritePage:
                 hideNetworkError();
@@ -97,11 +103,12 @@ public class MainActivity extends AppCompatActivity {
                     mFavoriteState = favoriteGridLayoutManager.onSaveInstanceState();
                     binding.recyclerView.setLayoutManager(movieGridLayoutManager);
                     hideFavoriteEmpty();
-                    String tempSort = sharedPreferences.getString(this.getString(R.string.sort_key), this.getString(R.string.sort_by_default));
+                    String tempSort = sharedPreferences.getString(getString(R.string.sort_key), getString(R.string.sort_by_default));
                     if (!currentSort.equals(tempSort)) {
-                        mMovieViewModel.getMovieResult(tempSort).unsubscribeOn(Schedulers.io());
+                        mMovieViewModel.getMovieResult(currentSort).unsubscribeOn(Schedulers.io());
                         currentSort = tempSort;
-                        mMovieViewModel.getMovieResult(currentSort).subscribe(result -> adapter.submitData(getLifecycle(), result));
+                        mMovieViewModel.getMovieResult(currentSort).subscribe(
+                                result -> adapter.submitData(getLifecycle(), result));
                     } else {
                         if (new NetworkManager(this).isNetworkAvailable()) {
                             hideNetworkError();
@@ -133,12 +140,17 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
-
-//        binding.retryButton.setOnClickListener(v -> execInitMovieDataTask());
+        binding.retryButton.setOnClickListener(v -> {
+            String tempSort = sharedPreferences.getString(getString(R.string.sort_key), getString(R.string.sort_by_default));
+            if (!currentSort.equals(tempSort)) {
+                currentSort = tempSort;
+            }
+            mMovieViewModel.getMovieResult(currentSort).subscribe(
+                    result -> adapter.submitData(getLifecycle(), result));
+        });
 
     }
 
-    @NotNull
     private GridLayoutManager getGridLayoutManager() {
         int orientation = getResources().getConfiguration().orientation;
         int spanCount = orientation == Configuration.ORIENTATION_PORTRAIT ? 2 : 4;
@@ -190,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         if (savedInstanceState != null) {
             Parcelable movie = savedInstanceState.getParcelable(SAVE_MOVIE_STATE_KEY);
@@ -203,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onSaveInstanceState(@NonNull @NotNull Bundle outState) {
+    protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 //        outState.putString(SAVE_MOVIE_PAGE_KEY, sort);
         switch (binding.bottomNavigation.getSelectedItemId()) {
@@ -240,6 +252,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showNetworkError() {
+        mMovieViewModel.getMovieResult(currentSort).unsubscribeOn(Schedulers.io());
         binding.recyclerView.setVisibility(View.GONE);
         binding.networkErrorConstrainLayout.setVisibility(View.VISIBLE);
     }
