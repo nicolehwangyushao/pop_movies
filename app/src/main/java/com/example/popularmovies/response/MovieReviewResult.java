@@ -2,14 +2,14 @@ package com.example.popularmovies.response;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class MovieReviewResult {
-    private ArrayList<MovieReviewResult.MovieReview> results;
+    private List<MovieReview> results;
     @SerializedName("total_pages")
     private int totalPage;
 
-    public ArrayList<MovieReviewResult.MovieReview> getResults() {
+    public List<MovieReview> getResults() {
         return results;
     }
 

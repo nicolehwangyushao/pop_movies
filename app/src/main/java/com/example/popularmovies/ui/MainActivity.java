@@ -8,67 +8,64 @@ import android.os.Parcelable;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.popularmovies.R;
-import com.example.popularmovies.response.MovieResult;
-import com.example.popularmovies.service.MovieApiClient;
+import com.example.popularmovies.databinding.ActivityMainBinding;
+import com.example.popularmovies.repository.MovieRepository;
 import com.example.popularmovies.service.NetworkManager;
-import com.example.popularmovies.service.RetrofitService;
 import com.example.popularmovies.ui.adapter.FavoriteMovieAdapter;
 import com.example.popularmovies.ui.adapter.MoviePosterAdapter;
 import com.example.popularmovies.viewmodel.FavoriteMovieViewModel;
-import com.example.popularmovies.viewmodel.ViewModelFactory;
+import com.example.popularmovies.viewmodel.FavoriteMovieViewModelFactory;
+import com.example.popularmovies.viewmodel.MovieViewModel;
+import com.example.popularmovies.viewmodel.MovieViewModelFactory;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
     private static final String SAVE_MOVIE_STATE_KEY = "save_movie_state";
     private static final String SAVE_FAVORITE_STATE_KEY = "save_favorite_state";
-    private static final String SAVE_MOVIE_PAGE_KEY = "save_movie_page";
-    private final MovieApiClient client = new RetrofitService().getMovieApiClient();
-    private int currentPage = 1;
-    private int lastPage = -1;
+    //    private static final String SAVE_MOVIE_PAGE_KEY = "save_movie_page";
+    private String currentSort;
     private FavoriteMovieAdapter favoriteMovieAdapter;
     private MoviePosterAdapter adapter;
-    private RecyclerView recyclerView;
     private GridLayoutManager favoriteGridLayoutManager;
     private GridLayoutManager movieGridLayoutManager;
-    private String sort;
     private FavoriteMovieViewModel mFavoriteMovieViewModel;
+    private MovieViewModel mMovieViewModel;
     private Parcelable mMovieState;
     private Parcelable mFavoriteState;
+    private ActivityMainBinding binding;
 
     @Override
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ViewModelFactory factory = new ViewModelFactory(getApplication());
-        mFavoriteMovieViewModel = new ViewModelProvider(this, factory).get(FavoriteMovieViewModel.class);
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigation);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        View view = binding.getRoot();
+        setContentView(view);
+        mFavoriteMovieViewModel = new ViewModelProvider(this, new FavoriteMovieViewModelFactory(getApplication()))
+                .get(FavoriteMovieViewModel.class);
+        mMovieViewModel = new ViewModelProvider(this, new MovieViewModelFactory(new MovieRepository()))
+                .get(MovieViewModel.class);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         favoriteMovieAdapter = new FavoriteMovieAdapter(new FavoriteMovieAdapter.FavoriteMovieDiff(), this);
         adapter = new MoviePosterAdapter(new MoviePosterAdapter.MovieDiff(), this);
         favoriteGridLayoutManager = getGridLayoutManager();
         movieGridLayoutManager = getGridLayoutManager();
-        recyclerView = findViewById(R.id.recyclerView);
+
 
         mFavoriteMovieViewModel.getFavoriteMovieList().observe(this, movies -> {
-            if (movies.isEmpty() && bottomNavigationView.getSelectedItemId() == R.id.favoritePage) {
+            if (movies.isEmpty() && binding.bottomNavigation.getSelectedItemId() == R.id.favoritePage) {
                 showFavoriteEmpty();
             } else {
                 hideFavoriteEmpty();
@@ -76,33 +73,35 @@ public class MainActivity extends AppCompatActivity {
             favoriteMovieAdapter.submitList(movies);
         });
 
-        execInitMovieDataTask();
 
         //check initial bottom navigation selected item
-        switch (bottomNavigationView.getSelectedItemId()) {
+        switch (binding.bottomNavigation.getSelectedItemId()) {
             case R.id.mainPage:
-                recyclerView.setLayoutManager(movieGridLayoutManager);
+                currentSort = sharedPreferences.getString(getString(R.string.sort_key), getString(R.string.sort_by_default));
+                mMovieViewModel.getMovieResult(currentSort).subscribe(result -> adapter.submitData(getLifecycle(), result));
+                binding.recyclerView.setLayoutManager(movieGridLayoutManager);
+                binding.recyclerView.setAdapter(adapter);
                 break;
             case R.id.favoritePage:
                 hideNetworkError();
                 if (favoriteMovieAdapter.getCurrentList().isEmpty()) {
                     showFavoriteEmpty();
                 }
-                recyclerView.setLayoutManager(favoriteGridLayoutManager);
+                binding.recyclerView.setLayoutManager(favoriteGridLayoutManager);
                 break;
         }
 
-        bottomNavigationView.setOnItemSelectedListener(item -> {
+        binding.bottomNavigation.setOnItemSelectedListener(item -> {
             switch (item.getItemId()) {
                 case R.id.mainPage:
                     mFavoriteState = favoriteGridLayoutManager.onSaveInstanceState();
-                    recyclerView.setLayoutManager(movieGridLayoutManager);
+                    binding.recyclerView.setLayoutManager(movieGridLayoutManager);
                     hideFavoriteEmpty();
-                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-                    String currentSort = sharedPreferences.getString(this.getString(R.string.sort_key), this.getString(R.string.sort_by_default));
-                    if (!currentSort.equals(sort)) {
-                        sort = currentSort;
-                        execInitMovieDataTask();
+                    String tempSort = sharedPreferences.getString(this.getString(R.string.sort_key), this.getString(R.string.sort_by_default));
+                    if (!currentSort.equals(tempSort)) {
+                        mMovieViewModel.getMovieResult(tempSort).unsubscribeOn(Schedulers.io());
+                        currentSort = tempSort;
+                        mMovieViewModel.getMovieResult(currentSort).subscribe(result -> adapter.submitData(getLifecycle(), result));
                     } else {
                         if (new NetworkManager(this).isNetworkAvailable()) {
                             hideNetworkError();
@@ -114,12 +113,11 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
 
-                    recyclerView.addOnScrollListener(getListener());
-                    recyclerView.setAdapter(adapter);
+                    binding.recyclerView.setAdapter(adapter);
                     break;
                 case R.id.favoritePage:
                     mMovieState = movieGridLayoutManager.onSaveInstanceState();
-                    recyclerView.setLayoutManager(favoriteGridLayoutManager);
+                    binding.recyclerView.setLayoutManager(favoriteGridLayoutManager);
                     hideNetworkError();
                     if (favoriteMovieAdapter.getCurrentList().isEmpty()) {
                         showFavoriteEmpty();
@@ -128,8 +126,7 @@ public class MainActivity extends AppCompatActivity {
                             favoriteGridLayoutManager.onRestoreInstanceState(mFavoriteState);
                         }
                     }
-                    recyclerView.clearOnScrollListeners();
-                    recyclerView.setAdapter(favoriteMovieAdapter);
+                    binding.recyclerView.setAdapter(favoriteMovieAdapter);
                     break;
 
             }
@@ -137,8 +134,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        Button retry = findViewById(R.id.retryButton);
-        retry.setOnClickListener(v -> execInitMovieDataTask());
+//        binding.retryButton.setOnClickListener(v -> execInitMovieDataTask());
 
     }
 
@@ -153,27 +149,26 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String currentSort = sharedPreferences.getString(this.getString(R.string.sort_key), this.getString(R.string.sort_by_default));
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigation);
-        execInitMovieDataTask();
-        switch (bottomNavigationView.getSelectedItemId()) {
+        String tempSort = sharedPreferences.getString(this.getString(R.string.sort_key), this.getString(R.string.sort_by_default));
+        switch (binding.bottomNavigation.getSelectedItemId()) {
             case R.id.mainPage:
-                recyclerView.setAdapter(adapter);
-                recyclerView.addOnScrollListener(getListener());
-                if (!currentSort.equals(sort)) {
-                    sort = currentSort;
+                binding.recyclerView.setAdapter(adapter);
+                if (!currentSort.equals(tempSort)) {
+                    mMovieViewModel.getMovieResult(tempSort).unsubscribeOn(Schedulers.io());
+                    currentSort = tempSort;
+                    mMovieViewModel.getMovieResult(currentSort).subscribe(result -> adapter.submitData(getLifecycle(), result));
                 } else {
                     if (mMovieState != null) {
+                        binding.recyclerView.setLayoutManager(movieGridLayoutManager);
                         movieGridLayoutManager.onRestoreInstanceState(mMovieState);
-                        recyclerView.setLayoutManager(movieGridLayoutManager);
                     }
                 }
                 break;
             case R.id.favoritePage:
-                recyclerView.setAdapter(favoriteMovieAdapter);
+                binding.recyclerView.setAdapter(favoriteMovieAdapter);
                 if (mFavoriteState != null) {
                     favoriteGridLayoutManager.onRestoreInstanceState(mFavoriteState);
-                    recyclerView.setLayoutManager(favoriteGridLayoutManager);
+                    binding.recyclerView.setLayoutManager(favoriteGridLayoutManager);
                 }
                 break;
         }
@@ -198,13 +193,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         if (savedInstanceState != null) {
-
             Parcelable movie = savedInstanceState.getParcelable(SAVE_MOVIE_STATE_KEY);
             Parcelable favorite = savedInstanceState.getParcelable(SAVE_FAVORITE_STATE_KEY);
             if (movie != null) mMovieState = movie;
             if (favorite != null) mFavoriteState = favorite;
-            sort = savedInstanceState.getString(SAVE_MOVIE_PAGE_KEY);
-
+//            sort = savedInstanceState.getString(SAVE_MOVIE_PAGE_KEY);
         }
 
     }
@@ -212,9 +205,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(@NonNull @NotNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigation);
-        outState.putString(SAVE_MOVIE_PAGE_KEY, sort);
-        switch (bottomNavigationView.getSelectedItemId()) {
+//        outState.putString(SAVE_MOVIE_PAGE_KEY, sort);
+        switch (binding.bottomNavigation.getSelectedItemId()) {
             case R.id.mainPage:
                 outState.putParcelable(SAVE_MOVIE_STATE_KEY, movieGridLayoutManager.onSaveInstanceState());
                 outState.putParcelable(SAVE_FAVORITE_STATE_KEY, mFavoriteState);
@@ -224,7 +216,6 @@ public class MainActivity extends AppCompatActivity {
                 outState.putParcelable(SAVE_MOVIE_STATE_KEY, mMovieState);
                 break;
         }
-//        outState.putInt(SAVE_MOVIE_PAGE_KEY, currentPage);
     }
 
     @Override
@@ -243,114 +234,25 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-
-    private void initMovieDataTask() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        sort = sharedPreferences.getString(this.getString(R.string.sort_key), this.getString(R.string.sort_by_default));
-        Call<MovieResult> call = client.getMoviesList(sort, currentPage);
-        call.enqueue(new Callback<MovieResult>() {
-            @Override
-            public void onResponse(Call<MovieResult> call, Response<MovieResult> response) {
-                MovieResult result = response.body();
-                ArrayList<MovieResult.MovieData> movieDataList = result.getResults();
-                hideNetworkError();
-                adapter.submitList(movieDataList);
-                lastPage = result.getTotalPage();
-            }
-
-            @Override
-            public void onFailure(Call<MovieResult> call, Throwable t) {
-                // the network call was a failure
-                showNetworkError();
-            }
-        });
-    }
-
-    private void execInitMovieDataTask() {
-        currentPage = 1;
-
-        if (new NetworkManager(this).isNetworkAvailable()) {
-            hideNetworkError();
-            initMovieDataTask();
-
-        } else {
-            showNetworkError();
-        }
-    }
-
-    private void updateMovieDataTask(int page) {
-
-        Call<MovieResult> call = client.getMoviesList(sort, page);
-        call.enqueue(new Callback<MovieResult>() {
-            @Override
-            public void onResponse(Call<MovieResult> call, Response<MovieResult> response) {
-                MovieResult result = response.body();
-                ArrayList<MovieResult.MovieData> movieDataList = result.getResults();
-                hideNetworkError();
-
-                ArrayList<MovieResult.MovieData> newList = new ArrayList<>();
-                newList.addAll(adapter.getCurrentList());
-                newList.addAll(movieDataList);
-                adapter.submitList(newList);
-                currentPage = page;
-                lastPage = result.getTotalPage();
-            }
-
-            @Override
-            public void onFailure(Call<MovieResult> call, Throwable t) {
-                // the network call was a failure
-                showNetworkError();
-            }
-        });
-    }
-
-
-    private RecyclerView.OnScrollListener getListener() {
-        return new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-                if (new NetworkManager(getApplicationContext()).isNetworkAvailable()) {
-                    int onScreenItem = recyclerView.getChildCount();
-                    int visibleItem = movieGridLayoutManager.findFirstVisibleItemPosition();
-                    int totalItem = movieGridLayoutManager.getItemCount();
-                    if (currentPage <= lastPage && (totalItem - onScreenItem) <= (visibleItem + 4)) {
-                        int getPage = currentPage + 1;
-                        updateMovieDataTask(getPage);
-                    }
-                } else {
-                    showNetworkError();
-                }
-            }
-
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-            }
-        };
-    }
-
     private void hideNetworkError() {
-        recyclerView.setVisibility(View.VISIBLE);
-        findViewById(R.id.networkErrorConstrainLayout).setVisibility(View.GONE);
+        binding.recyclerView.setVisibility(View.VISIBLE);
+        binding.networkErrorConstrainLayout.setVisibility(View.GONE);
     }
 
     private void showNetworkError() {
-        recyclerView.setVisibility(View.GONE);
-        ConstraintLayout constraintLayout = findViewById(R.id.networkErrorConstrainLayout);
-        constraintLayout.setVisibility(View.VISIBLE);
+        binding.recyclerView.setVisibility(View.GONE);
+        binding.networkErrorConstrainLayout.setVisibility(View.VISIBLE);
     }
 
     private void hideFavoriteEmpty() {
-        recyclerView.setVisibility(View.VISIBLE);
-        findViewById(R.id.emptyFavorite).setVisibility(View.GONE);
+        binding.recyclerView.setVisibility(View.VISIBLE);
+        binding.emptyFavorite.setVisibility(View.GONE);
     }
 
     private void showFavoriteEmpty() {
         hideNetworkError();
-        recyclerView.setVisibility(View.GONE);
-        ConstraintLayout constraintLayout = findViewById(R.id.emptyFavorite);
-        constraintLayout.setVisibility(View.VISIBLE);
+        binding.recyclerView.setVisibility(View.GONE);
+        binding.emptyFavorite.setVisibility(View.VISIBLE);
     }
 
 }

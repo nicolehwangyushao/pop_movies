@@ -13,14 +13,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.popularmovies.R;
 import com.example.popularmovies.response.MovieVideoResult;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class MovieVideoAdapter extends RecyclerView.Adapter<MovieVideoAdapter.ViewHolder> {
-    private final ArrayList<MovieVideoResult.MovieVideo> movieVideosArrayList;
+    private final List<MovieVideoResult.MovieVideo> movieVideosList;
     private final Context context;
 
-    public MovieVideoAdapter(ArrayList<MovieVideoResult.MovieVideo> movieVideosList, Context context) {
-        this.movieVideosArrayList = movieVideosList;
+    public MovieVideoAdapter(List<MovieVideoResult.MovieVideo> movieVideosList, Context context) {
+        this.movieVideosList = movieVideosList;
         this.context = context;
     }
 
@@ -32,7 +32,7 @@ public class MovieVideoAdapter extends RecyclerView.Adapter<MovieVideoAdapter.Vi
 
     @Override
     public void onBindViewHolder(MovieVideoAdapter.ViewHolder holder, int position) {
-        MovieVideoResult.MovieVideo movieVideo = movieVideosArrayList.get(position);
+        MovieVideoResult.MovieVideo movieVideo = movieVideosList.get(position);
         holder.videoTextView.setText(movieVideo.getName());
         String url = context.getString(R.string.youtube_base_url) + movieVideo.getKey();
         String youtubePackage = context.getString(R.string.youtube_package);
@@ -47,7 +47,7 @@ public class MovieVideoAdapter extends RecyclerView.Adapter<MovieVideoAdapter.Vi
 
     @Override
     public int getItemCount() {
-        return movieVideosArrayList.size();
+        return movieVideosList.size();
     }
 
     @Override

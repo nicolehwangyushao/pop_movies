@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.popularmovies.R;
 import com.example.popularmovies.data.FavoriteMovieData;
 import com.example.popularmovies.viewmodel.FavoriteMovieViewModel;
-import com.example.popularmovies.viewmodel.ViewModelFactory;
+import com.example.popularmovies.viewmodel.FavoriteMovieViewModelFactory;
 import com.example.popularmovies.response.MovieResult;
 import com.example.popularmovies.response.MovieReviewResult;
 import com.example.popularmovies.response.MovieVideoResult;
@@ -30,6 +30,7 @@ import com.example.popularmovies.ui.adapter.MovieVideoAdapter;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -54,7 +55,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         String releaseDate = getString(R.string.release_date_text, movieData.getReleaseDate());
         String rate = getString(R.string.rate_text, movieData.getVoteAverage());
         String overviewText = getString(R.string.overview_text, movieData.getOverview());
-        ViewModelFactory factory = new ViewModelFactory(getApplication());
+        FavoriteMovieViewModelFactory factory = new FavoriteMovieViewModelFactory(getApplication());
         FavoriteMovieViewModel mFavoriteMovieViewModel = new ViewModelProvider(this, factory).get(FavoriteMovieViewModel.class);
 
         TextView titleTextView = findViewById(R.id.titleTextView);
@@ -137,7 +138,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         call.enqueue(new Callback<MovieVideoResult>() {
             @Override
             public void onResponse(Call<MovieVideoResult> call, Response<MovieVideoResult> response) {
-                ArrayList<MovieVideoResult.MovieVideo> movieVideos = response.body().getResults();
+                List<MovieVideoResult.MovieVideo> movieVideos = response.body().getResults();
                 MovieVideoAdapter videoAdapter = new MovieVideoAdapter(movieVideos, context);
                 recyclerView.setAdapter(videoAdapter);
                 recyclerView.setLayoutManager(new LinearLayoutManager(context));
@@ -160,7 +161,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
             public void onResponse(Call<MovieReviewResult> call, Response<MovieReviewResult> response) {
                 MovieReviewResult result = response.body();
                 int lastPage = result.getTotalPage();
-                ArrayList<MovieReviewResult.MovieReview> movieReviews = result.getResults();
+                List<MovieReviewResult.MovieReview> movieReviews = result.getResults();
                 MovieReviewAdapter reviewAdapter = new MovieReviewAdapter(movieReviews);
                 recyclerView.setAdapter(reviewAdapter);
                 recyclerView.setLayoutManager(new LinearLayoutManager(context));
@@ -185,7 +186,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
                 public void onResponse(Call<MovieReviewResult> call, Response<MovieReviewResult> response) {
                     MovieReviewResult result = response.body();
                     int lastPage = result.getTotalPage();
-                    ArrayList<MovieReviewResult.MovieReview> movieReviews = result.getResults();
+                    List<MovieReviewResult.MovieReview> movieReviews = result.getResults();
                     adapter.insertMovieData(movieReviews);
                     getMovieReview(movieId, adapter, lastPage, nextPage);
                 }

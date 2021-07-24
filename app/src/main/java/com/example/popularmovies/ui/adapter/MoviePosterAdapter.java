@@ -8,22 +8,19 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
+import androidx.paging.PagingDataAdapter;
 import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.popularmovies.R;
-import com.example.popularmovies.data.FavoriteMovieData;
 import com.example.popularmovies.response.MovieResult;
 import com.example.popularmovies.ui.MovieDetailsActivity;
 import com.squareup.picasso.Picasso;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-
-public class MoviePosterAdapter extends ListAdapter<MovieResult.MovieData, MoviePosterAdapter.ViewHolder> {
-//    private final ArrayList<MovieResult.MovieData> movieDataArrayList;
+public class MoviePosterAdapter extends PagingDataAdapter<MovieResult.MovieData, MoviePosterAdapter.ViewHolder> {
+    //    private final ArrayList<MovieResult.MovieData> movieDataArrayList;
     private final Context context;
 
     public MoviePosterAdapter(@NonNull DiffUtil.ItemCallback<MovieResult.MovieData> diffCallback, Context context) {
@@ -50,6 +47,7 @@ public class MoviePosterAdapter extends ListAdapter<MovieResult.MovieData, Movie
             context.startActivity(intent);
         });
     }
+
 
     public static class MovieDiff extends DiffUtil.ItemCallback<MovieResult.MovieData> {
 

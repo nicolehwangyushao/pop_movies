@@ -1,4 +1,4 @@
-package com.example.popularmovies.viewmodel;
+package com.example.popularmovies.repository;
 
 import android.content.Context;
 

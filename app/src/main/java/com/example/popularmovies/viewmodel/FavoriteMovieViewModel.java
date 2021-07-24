@@ -6,7 +6,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
 import com.example.popularmovies.data.FavoriteMovieData;
-import com.example.popularmovies.viewmodel.FavoriteMovieRepository;
+import com.example.popularmovies.repository.FavoriteMovieRepository;
 
 import java.util.List;
 
@@ -36,7 +36,4 @@ public class FavoriteMovieViewModel extends AndroidViewModel {
         mFavoriteMovieRepository.delete(movieData);
     }
 
-    public void deleteAll() {
-        mFavoriteMovieRepository.deleteAll();
-    }
 }

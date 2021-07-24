@@ -3,22 +3,28 @@ package com.example.popularmovies.response;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class MovieResult {
 
-    private ArrayList<MovieData> results;
+    private List<MovieData> results;
     @SerializedName("total_pages")
     private int totalPage;
 
-    public ArrayList<MovieData> getResults() {
-        return results;
-    }
 
     public int getTotalPage() {
         return totalPage;
     }
+
+    public void setResults(List<MovieData> results) {
+        this.results = results;
+    }
+
+    public List<MovieData> getResults() {
+        return results;
+    }
+
 
     public static class MovieData implements Serializable {
         @SerializedName("id")
@@ -36,73 +42,61 @@ public class MovieResult {
         @SerializedName("release_date")
         private String releaseDate;
 
-        public void setMovieId(int movieId) {
-            this.movieId = movieId;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        public void setPosterPath(String posterPath) {
-            this.posterPath = posterPath;
-        }
-
-        public void setBackDropPath(String backDropPath) {
-            this.backDropPath = backDropPath;
-        }
-
-        public void setReleaseDate(String releaseDate) {
-            this.releaseDate = releaseDate;
-        }
-
-        public void setVoteAverage(String voteAverage) {
-            this.voteAverage = voteAverage;
-        }
-
-        public void setOverview(String overview) {
-            this.overview = overview;
-        }
-
         public int getMovieId() {
             return movieId;
+        }
+
+        public void setMovieId(int movieId) {
+            this.movieId = movieId;
         }
 
         public String getTitle() {
             return title;
         }
 
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
         public String getPosterPath() {
             return posterPath;
+        }
+
+        public void setPosterPath(String posterPath) {
+            this.posterPath = posterPath;
         }
 
         public String getBackDropPath() {
             return backDropPath;
         }
 
+        public void setBackDropPath(String backDropPath) {
+            this.backDropPath = backDropPath;
+        }
+
         public String getReleaseDate() {
             return releaseDate;
+        }
+
+        public void setReleaseDate(String releaseDate) {
+            this.releaseDate = releaseDate;
         }
 
         public String getVoteAverage() {
             return voteAverage;
         }
 
+        public void setVoteAverage(String voteAverage) {
+            this.voteAverage = voteAverage;
+        }
+
         public String getOverview() {
             return overview;
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            MovieData movieData = (MovieData) o;
-            return movieId == movieData.movieId;
+        public void setOverview(String overview) {
+            this.overview = overview;
         }
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(movieId);
-        }
     }
 }

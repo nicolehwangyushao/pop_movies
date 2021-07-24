@@ -8,18 +8,20 @@ import androidx.lifecycle.ViewModelProvider;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ViewModelFactory implements ViewModelProvider.Factory {
+public class FavoriteMovieViewModelFactory implements ViewModelProvider.Factory {
     static Application application;
 
-
-    public ViewModelFactory(Application application) {
-        ViewModelFactory.application = application;
+    public FavoriteMovieViewModelFactory(Application application) {
+        FavoriteMovieViewModelFactory.application = application;
     }
 
     @NonNull
     @NotNull
     @Override
     public <T extends ViewModel> T create(@NonNull @NotNull Class<T> modelClass) {
-        return (T) new FavoriteMovieViewModel(application);
+        if (modelClass.isAssignableFrom(FavoriteMovieViewModel.class)) {
+            return (T) new FavoriteMovieViewModel(application);
+        }
+        return null;
     }
 }

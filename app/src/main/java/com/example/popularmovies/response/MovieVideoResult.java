@@ -1,11 +1,12 @@
 package com.example.popularmovies.response;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MovieVideoResult {
-    private ArrayList<MovieVideo> results;
+    private List<MovieVideo> results;
 
-    public ArrayList<MovieVideo> getResults() {
+    public List<MovieVideo> getResults() {
         return results;
     }
 

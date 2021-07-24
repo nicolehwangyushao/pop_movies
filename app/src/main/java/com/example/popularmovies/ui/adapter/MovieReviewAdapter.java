@@ -13,16 +13,15 @@ import com.example.popularmovies.response.MovieReviewResult;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class MovieReviewAdapter extends RecyclerView.Adapter<MovieReviewAdapter.ViewHolder> {
-    private final ArrayList<MovieReviewResult.MovieReview> movieReviewsArrayList;
+    private final List<MovieReviewResult.MovieReview> movieReviewsList;
 
-    public MovieReviewAdapter(ArrayList<MovieReviewResult.MovieReview> movieReviewList) {
-        this.movieReviewsArrayList = movieReviewList;
+    public MovieReviewAdapter(List<MovieReviewResult.MovieReview> movieReviewList) {
+        this.movieReviewsList = movieReviewList;
     }
 
     @Override
@@ -33,7 +32,7 @@ public class MovieReviewAdapter extends RecyclerView.Adapter<MovieReviewAdapter.
 
     @Override
     public void onBindViewHolder(MovieReviewAdapter.ViewHolder holder, int position) {
-        MovieReviewResult.MovieReview movieReview = movieReviewsArrayList.get(position);
+        MovieReviewResult.MovieReview movieReview = movieReviewsList.get(position);
         holder.authorTextView.setText(movieReview.getAuthor());
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ENGLISH);
         try {
@@ -46,13 +45,14 @@ public class MovieReviewAdapter extends RecyclerView.Adapter<MovieReviewAdapter.
         holder.contentTextView.setText(movieReview.getContent());
     }
 
-    public void insertMovieData(ArrayList<MovieReviewResult.MovieReview> addData) {
-        movieReviewsArrayList.addAll(addData);
+    public void insertMovieData(List<MovieReviewResult.MovieReview> reviews) {
+        movieReviewsList.addAll(reviews);
     }
+
 
     @Override
     public int getItemCount() {
-        return movieReviewsArrayList.size();
+        return movieReviewsList.size();
     }
 
     @Override

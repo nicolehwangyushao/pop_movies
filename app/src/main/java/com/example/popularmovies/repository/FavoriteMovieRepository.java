@@ -1,4 +1,4 @@
-package com.example.popularmovies.viewmodel;
+package com.example.popularmovies.repository;
 
 import android.app.Application;
 
@@ -13,33 +13,33 @@ public class FavoriteMovieRepository {
     private final FavoriteMovieDao mFavoriteMovieDao;
     private final LiveData<List<FavoriteMovieData>> mFavoriteMovieList;
 
-    FavoriteMovieRepository(Application application) {
+    public FavoriteMovieRepository(Application application) {
         FavoriteMovieDatabase db = FavoriteMovieDatabase.getDatabase(application);
         mFavoriteMovieDao = db.favoriteMovieDao();
         mFavoriteMovieList = mFavoriteMovieDao.getAll();
     }
 
-    LiveData<List<FavoriteMovieData>> getFavoriteMovieList() {
+    public LiveData<List<FavoriteMovieData>> getFavoriteMovieList() {
         return mFavoriteMovieList;
     }
 
-    LiveData<FavoriteMovieData> isMovieExist(int movieId) {
+    public LiveData<FavoriteMovieData> isMovieExist(int movieId) {
         return mFavoriteMovieDao.findByMovieId(movieId);
     }
 
-    void insert(FavoriteMovieData movieData) {
+    public void insert(FavoriteMovieData movieData) {
         FavoriteMovieDatabase.databaseWriteExecutor.execute(() -> {
             mFavoriteMovieDao.insert(movieData);
         });
     }
 
-    void delete(FavoriteMovieData movieData) {
+    public void delete(FavoriteMovieData movieData) {
         FavoriteMovieDatabase.databaseWriteExecutor.execute(() -> {
             mFavoriteMovieDao.delete(movieData);
         });
     }
 
-    void deleteAll() {
+    public void deleteAll() {
         FavoriteMovieDatabase.databaseWriteExecutor.execute(() -> {
             mFavoriteMovieDao.deleteAllFromTable();
         });
