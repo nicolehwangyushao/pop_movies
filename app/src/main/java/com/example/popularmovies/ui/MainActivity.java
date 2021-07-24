@@ -75,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
             case R.id.mainPage:
                 currentSort = sharedPreferences.getString(getString(R.string.sort_key), getString(R.string.sort_by_default));
                 mMovieViewModel.getMovieResult(currentSort).subscribe(result -> adapter.submitData(getLifecycle(), result));
-                binding.recyclerView.setLayoutManager(movieGridLayoutManager);
                 binding.recyclerView.setAdapter(adapter);
                 adapter.addLoadStateListener(loadStates -> {
                     if (loadStates.getPrepend() instanceof LoadState.Error ||
@@ -87,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     return null;
                 });
+                binding.recyclerView.setLayoutManager(movieGridLayoutManager);
                 break;
             case R.id.favoritePage:
                 hideNetworkError();
@@ -101,7 +101,6 @@ public class MainActivity extends AppCompatActivity {
             switch (item.getItemId()) {
                 case R.id.mainPage:
                     mFavoriteState = favoriteGridLayoutManager.onSaveInstanceState();
-                    binding.recyclerView.setLayoutManager(movieGridLayoutManager);
                     hideFavoriteEmpty();
                     String tempSort = sharedPreferences.getString(getString(R.string.sort_key), getString(R.string.sort_by_default));
                     if (!currentSort.equals(tempSort)) {
@@ -119,12 +118,11 @@ public class MainActivity extends AppCompatActivity {
                             showNetworkError();
                         }
                     }
-
+                    binding.recyclerView.setLayoutManager(movieGridLayoutManager);
                     binding.recyclerView.setAdapter(adapter);
                     break;
                 case R.id.favoritePage:
                     mMovieState = movieGridLayoutManager.onSaveInstanceState();
-                    binding.recyclerView.setLayoutManager(favoriteGridLayoutManager);
                     hideNetworkError();
                     if (favoriteMovieAdapter.getCurrentList().isEmpty()) {
                         showFavoriteEmpty();
@@ -133,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
                             favoriteGridLayoutManager.onRestoreInstanceState(mFavoriteState);
                         }
                     }
+                    binding.recyclerView.setLayoutManager(favoriteGridLayoutManager);
                     binding.recyclerView.setAdapter(favoriteMovieAdapter);
                     break;
 
@@ -171,8 +170,8 @@ public class MainActivity extends AppCompatActivity {
                     mMovieViewModel.getMovieResult(currentSort).subscribe(result -> adapter.submitData(getLifecycle(), result));
                 } else {
                     if (mMovieState != null) {
-                        binding.recyclerView.setLayoutManager(movieGridLayoutManager);
                         movieGridLayoutManager.onRestoreInstanceState(mMovieState);
+                        binding.recyclerView.setLayoutManager(movieGridLayoutManager);
                     }
                 }
                 break;
