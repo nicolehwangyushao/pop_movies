@@ -1,9 +1,7 @@
 package com.example.popularmovies.viewmodel;
 
 import androidx.lifecycle.ViewModel;
-import androidx.paging.Pager;
 import androidx.paging.PagingData;
-
 
 import com.example.popularmovies.repository.MovieRepository;
 import com.example.popularmovies.response.MovieResult;
@@ -21,7 +19,7 @@ public class MovieViewModel extends ViewModel {
 
     public Flowable<PagingData<MovieResult.MovieData>> getMovieResult(String sort) {
         Flowable<PagingData<MovieResult.MovieData>> lastResult = currentResult;
-        if (currentSort!= null && currentSort.equals(sort) && lastResult != null) {
+        if (currentSort != null && currentSort.equals(sort) && lastResult != null) {
             return lastResult;
         }
         currentSort = sort;

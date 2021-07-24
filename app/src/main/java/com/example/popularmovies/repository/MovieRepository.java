@@ -15,13 +15,15 @@ import kotlinx.coroutines.CoroutineScope;
 
 public class MovieRepository {
     private static final int PAGE_SIZE = 20;
-    public Flowable<PagingData<MovieResult.MovieData>> pagingDataFlow;
+    private Flowable<PagingData<MovieResult.MovieData>> pagingDataFlow;
 
     public Flowable<PagingData<MovieResult.MovieData>> getResultMovieData(String sort) {
         CoroutineScope viewModelScope = ViewModelKt.getViewModelScope(new MovieViewModel(this));
-        Pager<Integer, MovieResult.MovieData> pager = new Pager<>(new PagingConfig(PAGE_SIZE, PAGE_SIZE * 3), () -> new MoviePagingSource(sort));
+        PagingConfig pagingConfig = new PagingConfig(PAGE_SIZE, PAGE_SIZE * 3);
+        Pager<Integer, MovieResult.MovieData> pager = new Pager<>(pagingConfig, () -> new MoviePagingSource(sort));
         pagingDataFlow = PagingRx.getFlowable(pager);
         PagingRx.cachedIn(pagingDataFlow, viewModelScope);
         return pagingDataFlow;
     }
+
 }
