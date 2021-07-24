@@ -80,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
             favoriteMovieAdapter.submitList(movies);
         });
 
+
         //check initial bottom navigation selected item
         switch (binding.bottomNavigation.getSelectedItemId()) {
             case R.id.mainPage:

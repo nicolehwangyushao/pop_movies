@@ -19,7 +19,7 @@ public class MovieRepository {
 
     public Flowable<PagingData<MovieResult.MovieData>> getResultMovieData(String sort) {
         CoroutineScope viewModelScope = ViewModelKt.getViewModelScope(new MovieViewModel(this));
-        PagingConfig pagingConfig = new PagingConfig(PAGE_SIZE, PAGE_SIZE * 3);
+        PagingConfig pagingConfig = new PagingConfig(PAGE_SIZE, PAGE_SIZE * 3, true, PAGE_SIZE * 3);
         Pager<Integer, MovieResult.MovieData> pager = new Pager<>(pagingConfig, () -> new MoviePagingSource(sort));
         pagingDataFlow = PagingRx.getFlowable(pager);
         PagingRx.cachedIn(pagingDataFlow, viewModelScope);
