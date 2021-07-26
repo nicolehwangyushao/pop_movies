@@ -17,13 +17,13 @@ public class MovieViewModel extends ViewModel {
         movieRepository = repository;
     }
 
-    public Flowable<PagingData<MovieResult.MovieData>> getMovieResult(String sort) {
+    public Flowable<PagingData<MovieResult.MovieData>> getMovieResult(String sort, int initKey) {
         Flowable<PagingData<MovieResult.MovieData>> lastResult = currentResult;
         if (currentSort != null && currentSort.equals(sort) && lastResult != null) {
             return lastResult;
         }
         currentSort = sort;
-        Flowable<PagingData<MovieResult.MovieData>> newResult = movieRepository.getResultMovieData(sort);
+        Flowable<PagingData<MovieResult.MovieData>> newResult = movieRepository.getResultMovieData(sort, initKey);
         currentResult = newResult;
         return newResult;
     }

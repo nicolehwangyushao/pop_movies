@@ -28,7 +28,7 @@ import com.example.popularmovies.viewmodel.MovieViewModel;
 import com.example.popularmovies.viewmodel.MovieViewModelFactory;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 public class MainActivity extends AppCompatActivity {
     private static final String SAVE_MOVIE_STATE_KEY = "save_movie_state";
@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private Parcelable mMovieState;
     private Parcelable mFavoriteState;
     private ActivityMainBinding binding;
+    private Disposable disposable;
 
     @Override
 
@@ -85,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         switch (binding.bottomNavigation.getSelectedItemId()) {
             case R.id.mainPage:
                 currentSort = sharedPreferences.getString(getString(R.string.sort_key), getString(R.string.sort_by_default));
-                mMovieViewModel.getMovieResult(currentSort).subscribe(result -> adapter.submitData(getLifecycle(), result));
+                disposable = mMovieViewModel.getMovieResult(currentSort, 1).subscribe(result -> adapter.submitData(getLifecycle(), result));
                 binding.recyclerView.setAdapter(adapter);
                 binding.recyclerView.setLayoutManager(movieGridLayoutManager);
                 break;
@@ -105,9 +106,9 @@ public class MainActivity extends AppCompatActivity {
                     hideFavoriteEmpty();
                     String tempSort = sharedPreferences.getString(getString(R.string.sort_key), getString(R.string.sort_by_default));
                     if (!currentSort.equals(tempSort)) {
-                        mMovieViewModel.getMovieResult(currentSort).unsubscribeOn(Schedulers.io());
+                        disposable.dispose();
                         currentSort = tempSort;
-                        mMovieViewModel.getMovieResult(currentSort).subscribe(result -> adapter.submitData(getLifecycle(), result));
+                        disposable = mMovieViewModel.getMovieResult(currentSort, 1).subscribe(result -> adapter.submitData(getLifecycle(), result));
                     }
                     if (new NetworkManager(this).isNetworkAvailable()) {
                         hideNetworkError();
@@ -144,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
             if (!currentSort.equals(tempSort)) {
                 currentSort = tempSort;
             }
-            mMovieViewModel.getMovieResult(currentSort).subscribe(
+            disposable = mMovieViewModel.getMovieResult(currentSort, 1).subscribe(
                     result -> adapter.submitData(getLifecycle(), result));
         });
 
@@ -165,9 +166,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.mainPage:
                 binding.recyclerView.setAdapter(adapter);
                 if (!currentSort.equals(tempSort)) {
-                    mMovieViewModel.getMovieResult(tempSort).unsubscribeOn(Schedulers.io());
+                    disposable.dispose();
                     currentSort = tempSort;
-                    mMovieViewModel.getMovieResult(currentSort).subscribe(result -> adapter.submitData(getLifecycle(), result));
+                    disposable = mMovieViewModel.getMovieResult(currentSort, 1).subscribe(result -> adapter.submitData(getLifecycle(), result));
                 } else {
                     if (mMovieState != null) {
                         movieGridLayoutManager.onRestoreInstanceState(mMovieState);
@@ -249,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showNetworkError() {
-        mMovieViewModel.getMovieResult(currentSort).unsubscribeOn(Schedulers.io());
+        disposable.dispose();
         binding.recyclerView.setVisibility(View.GONE);
         binding.networkErrorConstrainLayout.setVisibility(View.VISIBLE);
     }
