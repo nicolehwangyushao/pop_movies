@@ -36,8 +36,6 @@ public class MainActivity extends AppCompatActivity {
     private String currentSort;
     private FavoriteMovieAdapter favoriteMovieAdapter;
     private MoviePosterAdapter adapter;
-    private GridLayoutManager favoriteGridLayoutManager;
-    private GridLayoutManager movieGridLayoutManager;
     private FavoriteMovieViewModel mFavoriteMovieViewModel;
     private MovieViewModel mMovieViewModel;
     private Parcelable mMovieState;
@@ -70,8 +68,7 @@ public class MainActivity extends AppCompatActivity {
             }
             return null;
         });
-        favoriteGridLayoutManager = getGridLayoutManager();
-        movieGridLayoutManager = getGridLayoutManager();
+        binding.recyclerView.setLayoutManager(getGridLayoutManager());
         mFavoriteMovieViewModel.getFavoriteMovieList().observe(this, movies -> {
             if (movies.isEmpty() && binding.bottomNavigation.getSelectedItemId() == R.id.favoritePage) {
                 showFavoriteEmpty();
@@ -81,28 +78,25 @@ public class MainActivity extends AppCompatActivity {
             favoriteMovieAdapter.submitList(movies);
         });
 
-
         //check initial bottom navigation selected item
         switch (binding.bottomNavigation.getSelectedItemId()) {
             case R.id.mainPage:
                 currentSort = sharedPreferences.getString(getString(R.string.sort_key), getString(R.string.sort_by_default));
                 disposable = mMovieViewModel.getMovieResult(currentSort, 1).subscribe(result -> adapter.submitData(getLifecycle(), result));
                 binding.recyclerView.setAdapter(adapter);
-                binding.recyclerView.setLayoutManager(movieGridLayoutManager);
                 break;
             case R.id.favoritePage:
                 hideNetworkError();
                 if (favoriteMovieAdapter.getCurrentList().isEmpty()) {
                     showFavoriteEmpty();
                 }
-                binding.recyclerView.setLayoutManager(favoriteGridLayoutManager);
                 break;
         }
 
         binding.bottomNavigation.setOnItemSelectedListener(item -> {
             switch (item.getItemId()) {
                 case R.id.mainPage:
-                    mFavoriteState = favoriteGridLayoutManager.onSaveInstanceState();
+                    mFavoriteState = binding.recyclerView.getLayoutManager().onSaveInstanceState();
                     hideFavoriteEmpty();
                     String tempSort = sharedPreferences.getString(getString(R.string.sort_key), getString(R.string.sort_by_default));
                     if (!currentSort.equals(tempSort)) {
@@ -113,26 +107,24 @@ public class MainActivity extends AppCompatActivity {
                     if (new NetworkManager(this).isNetworkAvailable()) {
                         hideNetworkError();
                         if (mMovieState != null) {
-                            movieGridLayoutManager.onRestoreInstanceState(mMovieState);
+                            binding.recyclerView.getLayoutManager().onRestoreInstanceState(mMovieState);
                         }
                     } else {
                         showNetworkError();
                     }
 
-                    binding.recyclerView.setLayoutManager(movieGridLayoutManager);
                     binding.recyclerView.setAdapter(adapter);
                     break;
                 case R.id.favoritePage:
-                    mMovieState = movieGridLayoutManager.onSaveInstanceState();
+                    mMovieState = binding.recyclerView.getLayoutManager().onSaveInstanceState();
                     hideNetworkError();
                     if (favoriteMovieAdapter.getCurrentList().isEmpty()) {
                         showFavoriteEmpty();
                     } else {
                         if (mFavoriteState != null) {
-                            favoriteGridLayoutManager.onRestoreInstanceState(mFavoriteState);
+                            binding.recyclerView.getLayoutManager().onRestoreInstanceState(mFavoriteState);
                         }
                     }
-                    binding.recyclerView.setLayoutManager(favoriteGridLayoutManager);
                     binding.recyclerView.setAdapter(favoriteMovieAdapter);
                     break;
 
@@ -171,16 +163,14 @@ public class MainActivity extends AppCompatActivity {
                     disposable = mMovieViewModel.getMovieResult(currentSort, 1).subscribe(result -> adapter.submitData(getLifecycle(), result));
                 } else {
                     if (mMovieState != null) {
-                        movieGridLayoutManager.onRestoreInstanceState(mMovieState);
-                        binding.recyclerView.setLayoutManager(movieGridLayoutManager);
+                        binding.recyclerView.getLayoutManager().onRestoreInstanceState(mMovieState);
                     }
                 }
                 break;
             case R.id.favoritePage:
                 binding.recyclerView.setAdapter(favoriteMovieAdapter);
                 if (mFavoriteState != null) {
-                    favoriteGridLayoutManager.onRestoreInstanceState(mFavoriteState);
-                    binding.recyclerView.setLayoutManager(favoriteGridLayoutManager);
+                    binding.recyclerView.getLayoutManager().onRestoreInstanceState(mFavoriteState);
                 }
                 break;
         }
@@ -193,10 +183,10 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigation);
         switch (bottomNavigationView.getSelectedItemId()) {
             case R.id.mainPage:
-                mMovieState = movieGridLayoutManager.onSaveInstanceState();
+                mMovieState = binding.recyclerView.getLayoutManager().onSaveInstanceState();
                 break;
             case R.id.favoritePage:
-                mFavoriteState = favoriteGridLayoutManager.onSaveInstanceState();
+                mFavoriteState = binding.recyclerView.getLayoutManager().onSaveInstanceState();
                 break;
         }
     }
@@ -218,11 +208,11 @@ public class MainActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         switch (binding.bottomNavigation.getSelectedItemId()) {
             case R.id.mainPage:
-                outState.putParcelable(SAVE_MOVIE_STATE_KEY, movieGridLayoutManager.onSaveInstanceState());
+                outState.putParcelable(SAVE_MOVIE_STATE_KEY, binding.recyclerView.getLayoutManager().onSaveInstanceState());
                 outState.putParcelable(SAVE_FAVORITE_STATE_KEY, mFavoriteState);
                 break;
             case R.id.favoritePage:
-                outState.putParcelable(SAVE_FAVORITE_STATE_KEY, favoriteGridLayoutManager.onSaveInstanceState());
+                outState.putParcelable(SAVE_FAVORITE_STATE_KEY, binding.recyclerView.getLayoutManager().onSaveInstanceState());
                 outState.putParcelable(SAVE_MOVIE_STATE_KEY, mMovieState);
                 break;
         }
